@@ -1,0 +1,44 @@
+[submodule "subprojects/arca-flow-k8s"]
+	path = subprojects/arca-flow-k8s
+	url = git@github.com:Monsau/arca-flow-k8s.git
+	branch = main
+[submodule "subprojects/arca-decision-room-k8s"]
+	path = subprojects/arca-decision-room-k8s
+	url = git@github.com:Monsau/arca-decision-room-k8s.git
+	branch = main
+[submodule "subprojects/arca-hub-k8s"]
+	path = subprojects/arca-hub-k8s
+	url = git@github.com:Monsau/arca-hub-k8s.git
+	branch = main
+[submodule "subprojects/arca-exchange-k8s"]
+	path = subprojects/arca-exchange-k8s
+	url = git@github.com:Monsau/arca-exchange-k8s.git
+	branch = main
+[submodule "subprojects/arca-packs-k8s"]
+	path = subprojects/arca-packs-k8s
+	url = git@github.com:Monsau/arca-packs-k8s.git
+	branch = main
+[submodule "subprojects/arca-trust-k8s"]
+	path = subprojects/arca-trust-k8s
+	url = git@github.com:Monsau/arca-trust-k8s.git
+	branch = main
+[submodule "subprojects/arca-studio-k8s"]
+	path = subprojects/arca-studio-k8s
+	url = git@github.com:Monsau/arca-studio-k8s.git
+	branch = main
+[submodule "subprojects/arca-bench-k8s"]
+	path = subprojects/arca-bench-k8s
+	url = git@github.com:Monsau/arca-bench-k8s.git
+	branch = main
+[submodule "subprojects/arca-cert-k8s"]
+	path = subprojects/arca-cert-k8s
+	url = git@github.com:Monsau/arca-cert-k8s.git
+	branch = main
+[submodule "subprojects/arcaq"]
+	path = subprojects/arcaq
+	url = git@github.com:Monsau/arcaq.git
+	branch = main
+[submodule "subprojects/arcax"]
+	path = subprojects/arcax
+	url = git@github.com:Monsau/arcax.git
+	branch = main
