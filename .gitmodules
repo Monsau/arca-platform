@@ -34,11 +34,11 @@
 	path = subprojects/arca-cert-k8s
 	url = git@github.com:Monsau/arca-cert-k8s.git
 	branch = main
-[submodule "subprojects/arcaq"]
-	path = subprojects/arcaq
-	url = git@github.com:Monsau/arcaq.git
+[submodule "subprojects/arcaq-k8s"]
+	path = subprojects/arcaq-k8s
+	url = git@github.com:Monsau/arcaq-k8s.git
 	branch = main
-[submodule "subprojects/arcax"]
-	path = subprojects/arcax
-	url = git@github.com:Monsau/arcax.git
+[submodule "subprojects/arcax-k8s"]
+	path = subprojects/arcax-k8s
+	url = git@github.com:Monsau/arcax-k8s.git
 	branch = main

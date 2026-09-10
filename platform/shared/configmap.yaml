@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: arca-platform-shared
-  namespace: arcasuite
+  namespace: platform
 data:
   # Bootstrap endpoints expected by every product module.
   # Real cluster addresses are patched per environment in the platform overlay.
