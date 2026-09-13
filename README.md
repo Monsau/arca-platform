@@ -210,19 +210,21 @@ Only directories justified by actual or explicitly planned capabilities are popu
 | Service skeleton structure | Implemented | `services/` |
 | Configuration defaults and examples | Implemented | `config/` |
 | Test structure | Implemented | `tests/` |
-| Identity contract | Planned | `contracts/identity/` placeholder |
-| Secrets contract | Planned | `contracts/secrets/` placeholder |
-| Observability contract | Planned | `contracts/observability/` placeholder |
-| Events contract | Planned | `contracts/events/` placeholder |
+| Identity contract | Implemented | `adapters/identity/jwt_adapter.py` |
+| Secrets contract | Implemented | `adapters/secrets/vault_adapter.py` |
+| Observability contract | Implemented | `adapters/observability/opentelemetry_adapter.py` |
+| Events contract | Implemented | `adapters/messaging/kafka_adapter.py`, `schemas/events/` |
 | Audit contract | Planned | `contracts/audit/` placeholder |
-| Health contract | Planned | `contracts/health/` placeholder |
-| Discovery contract | Planned | `contracts/discovery/` placeholder |
-| Lifecycle contract | Planned | `contracts/lifecycle/` placeholder |
-| Platform registry service | Planned | `services/platform-registry/` placeholder |
-| Capability discovery service | Planned | `services/capability-discovery/` placeholder |
-| Bootstrap service | Planned | `services/bootstrap/` placeholder |
-| Reference adapters | Planned | `adapters/*/` placeholders |
-| Contract test suite | Planned | `tests/contract/` placeholder |
+| Health contract | Implemented | `sdk/common/health.py`, `schemas/health/` |
+| Discovery contract | Implemented | `services/capability_discovery/`, `services/platform_registry/` |
+| Lifecycle contract | Implemented | `services/bootstrap/` |
+| Platform registry service | Implemented | `services/platform_registry/src/main.py` |
+| Capability discovery service | Implemented | `services/capability_discovery/src/main.py` |
+| Bootstrap service | Implemented | `services/bootstrap/src/main.py` |
+| Reference adapters | Implemented | `adapters/*/` |
+| Configuration SDK | Implemented | `sdk/common/config.py` |
+| Platform client SDK | Implemented | `sdk/platform_client/client.py` |
+| Contract test suite | Implemented | `tests/unit/`, `tests/integration/` |
 
 ## 18. Ownership and contribution rules
 

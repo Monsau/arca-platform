@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://arca.suite/schemas/health/health-report.json",
+  "title": "Arca Platform Health Report",
+  "type": "object",
+  "required": ["status", "version", "checks"],
+  "properties": {
+    "status": { "type": "string", "enum": ["healthy", "degraded", "unhealthy"] },
+    "version": { "type": "string", "minLength": 1 },
+    "checks": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "type": "string", "enum": ["healthy", "degraded", "unhealthy"] },
+            "message": { "type": "string" },
+            "details": { "type": "object" }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
