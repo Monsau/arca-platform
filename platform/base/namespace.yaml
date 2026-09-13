@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: platform
-  labels:
-    istio-injection: enabled
-    app.kubernetes.io/part-of: arca-suite
-    environment: server01
