@@ -19,7 +19,7 @@
 | RBAC scope/role enforcement | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ABAC attribute checks | ⚠️ (helpers only) | ⚠️ (resource ignored) | ⚠️ (helpers only) | ⚠️ (Python mirror only) | ⚠️ (basic ownership) | ✅ | ⚠️ (not enforced) | ⚠️ (not enforced) |
 | OPA/Rego runtime evaluation | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Rate limiting / DoS protection | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Rate limiting / DoS protection | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Request idempotency | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Audit / immutable ledger | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) |
 | Evidence signing / hash chain | ❌ | ❌ | ❌ | ❌ | ✅ (report seal) | ✅ (dossier seal) | ❌ | ❌ |
@@ -40,7 +40,7 @@
 | Separation of duties (proposer/voter/sealer) | ✅ | Domain + ABAC + Rego |
 | Override justification | ✅ | Non-empty justification enforced |
 | Sealing immutability | ✅ | Frozen package + sealed-row guard |
-| Review verdict gate | ❌ | `UNFAVORABLE` review does not block sealing |
+| Review verdict gate | ✅ | `UNFAVORABLE` review blocks sealing unless override recorded |
 | Workspace role enforcement | ❌ | Roles stored but not interpreted |
 | Vote signature verification | ❌ | Field exists, never verified |
 | Field-level encryption | ❌ | Justifications plaintext |
@@ -55,7 +55,7 @@
 | Compensation (status) | ✅ | Marks instances/steps cancelled |
 | Evidence binding | ✅ | Per-transition evidence rows |
 | OOC contract gate | ✅ | Feature-flagged HTTP client |
-| Step retry policy | ❌ | `attempt` field unused |
+| Step retry policy | ✅ | `max_retries` enforced before compensation; `flow.step.retrying` emitted |
 | Step timeout | ❌ | No timeout enforcement |
 | Real compensation actions | ❌ | Only status change, no rollback |
 | SLA/approval-deadline watchdog | ❌ | On-demand check only |
