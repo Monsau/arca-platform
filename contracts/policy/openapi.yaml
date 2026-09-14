@@ -1,0 +1,30 @@
+openapi: 3.1.0
+info:
+  title: Arca Platform Policy Contract
+  version: 1.0.0
+  description: |
+    Deployment-neutral RBAC/ABAC policy evaluation endpoints.
+    Concrete policy engines are plugged in through adapters.
+
+paths:
+  /policy/evaluate:
+    post:
+      summary: Evaluate a policy request
+      operationId: evaluatePolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../schemas/policy/policy-eval-request-schema.json'
+      responses:
+        '200':
+          description: Policy evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: '../../schemas/policy/policy-eval-response-schema.json'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized

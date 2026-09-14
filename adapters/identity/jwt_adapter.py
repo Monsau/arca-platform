@@ -15,6 +15,30 @@ class IdentityToken:
     claims: dict[str, Any]
 
 
+@dataclass
+class WorkloadIdentity:
+    workload_id: str
+    issuer: str
+    service_account: str = ""
+    attributes: dict[str, Any] = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        if self.attributes is None:
+            self.attributes = {}
+
+
+@dataclass
+class ServiceAccount:
+    account_id: str
+    account_name: str
+    issuer: str
+    scopes: list[str] = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        if self.scopes is None:
+            self.scopes = []
+
+
 class JWTIdentityAdapter:
     """Reference adapter validating OIDC/JWT tokens.
 
@@ -44,4 +68,18 @@ class JWTIdentityAdapter:
             audience=payload.get("aud", []),
             scopes=payload.get("scope", "").split(),
             claims=payload,
+        )
+
+    def workload_identity(self, token: str) -> WorkloadIdentity:
+        """Build a deployment-neutral workload identity from a service token."""
+        identity = self.validate(token)
+        return WorkloadIdentity(
+            workload_id=identity.subject,
+            issuer=identity.issuer,
+            service_account=identity.claims.get("client_id", identity.subject),
+            attributes={
+                "audience": identity.audience,
+                "roles": identity.claims.get("roles", []),
+                "groups": identity.claims.get("groups", []),
+            },
         )

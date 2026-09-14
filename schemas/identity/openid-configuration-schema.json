@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.local/schemas/identity/openid-configuration.json",
+  "title": "OIDC Discovery Document",
+  "description": "OpenID Connect Discovery 1.0 metadata document.",
+  "type": "object",
+  "required": [
+    "issuer",
+    "authorization_endpoint",
+    "token_endpoint",
+    "jwks_uri",
+    "response_types_supported",
+    "subject_types_supported",
+    "id_token_signing_alg_values_supported"
+  ],
+  "properties": {
+    "issuer": {
+      "type": "string",
+      "format": "uri"
+    },
+    "authorization_endpoint": {
+      "type": "string",
+      "format": "uri"
+    },
+    "token_endpoint": {
+      "type": "string",
+      "format": "uri"
+    },
+    "jwks_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "response_types_supported": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "subject_types_supported": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "id_token_signing_alg_values_supported": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

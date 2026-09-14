@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: Arca Platform Identity Contract
+  version: 1.0.0
+  description: |
+    Deployment-neutral identity and SSO contract fragments.
+    Products implement or consume these endpoints through adapters.
+
+paths:
+  /.well-known/openid-configuration:
+    get:
+      summary: OIDC discovery document
+      operationId: openidDiscovery
+      responses:
+        '200':
+          description: OIDC discovery metadata
+          content:
+            application/json:
+              schema:
+                $ref: '../../schemas/identity/openid-configuration-schema.json'
+
+  /oauth/token:
+    post:
+      summary: Token endpoint (reference shape)
+      operationId: token
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                  enum: [client_credentials, authorization_code, refresh_token]
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                scope:
+                  type: string
+              required: [grant_type]
+      responses:
+        '200':
+          description: Token response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+                  scope:
+                    type: string
+
+  /oauth/introspect:
+    post:
+      summary: Token introspection (RFC 7662 reference shape)
+      operationId: introspect
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                token_type_hint:
+                  type: string
+              required: [token]
+      responses:
+        '200':
+          description: Introspection response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active:
+                    type: boolean
+                  sub:
+                    type: string
+                  iss:
+                    type: string
+                  aud:
+                    type: string
+                  exp:
+                    type: integer
+                  scope:
+                    type: string
+                  client_id:
+                    type: string

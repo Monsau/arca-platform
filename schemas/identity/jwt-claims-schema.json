@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.local/schemas/identity/jwt-claims.json",
+  "title": "Arca JWT Claims",
+  "description": "Normalized JWT claims consumed by Arca Suite products.",
+  "type": "object",
+  "required": [
+    "sub",
+    "iss",
+    "aud",
+    "exp",
+    "iat"
+  ],
+  "properties": {
+    "sub": {
+      "type": "string",
+      "description": "Stable subject identifier"
+    },
+    "iss": {
+      "type": "string",
+      "description": "Issuer identifier"
+    },
+    "aud": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "Token audience(s)"
+    },
+    "exp": {
+      "type": "integer",
+      "description": "Expiration time (seconds since epoch)"
+    },
+    "iat": {
+      "type": "integer",
+      "description": "Issued-at time (seconds since epoch)"
+    },
+    "nbf": {
+      "type": "integer",
+      "description": "Not-before time (seconds since epoch)"
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "RBAC role names"
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Group memberships"
+    },
+    "scope": {
+      "type": "string",
+      "description": "Space-separated OAuth2 scopes"
+    }
+  },
+  "additionalProperties": true
+}

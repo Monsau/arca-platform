@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.local/schemas/policy/eval-response.json",
+  "title": "Policy Evaluation Response",
+  "description": "Neutral RBAC/ABAC policy evaluation response.",
+  "type": "object",
+  "required": ["decision"],
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["permit", "deny", "indeterminate"]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

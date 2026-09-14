@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.local/schemas/identity/workload-identity.json",
+  "title": "Arca Workload Identity",
+  "description": "Deployment-neutral machine identity abstraction.",
+  "type": "object",
+  "required": [
+    "workload_id",
+    "issuer"
+  ],
+  "properties": {
+    "workload_id": {
+      "type": "string",
+      "description": "Stable URI or URN identifier for the workload"
+    },
+    "issuer": {
+      "type": "string",
+      "description": "Identity provider or trust domain"
+    },
+    "service_account": {
+      "type": "string",
+      "description": "Human-readable service account name"
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Extra claims such as namespace, cluster, SPIFFE path"
+    }
+  },
+  "additionalProperties": true
+}
