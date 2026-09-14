@@ -58,8 +58,8 @@
 | Transactional SQL outbox + Kafka drain | ✅ | `OutboxEventRow` persisted with instance, `OutboxDrainer` flush |
 | OOC contract gate | ✅ | Feature-flagged HTTP client |
 | Step retry policy | ✅ | `max_retries` enforced before compensation; `flow.step.retrying` emitted |
-| Step timeout | ❌ | No timeout enforcement |
-| Real compensation actions | ❌ | Only status change, no rollback |
+| Step timeout | ✅ | Per-step `timeout_seconds` + `TimeoutWatchdog` + `flow.step.timeout` |
+| Real compensation actions | ✅ | `CompensationExecutor` invoked per compensated step; evidence + event emitted |
 | SLA/approval-deadline watchdog | ❌ | On-demand check only |
 | Multi-party approval quorum | ❌ | One approval per step |
 | Workflow definition immutability | ❌ | No deprecation/upgrade policy |
@@ -160,12 +160,11 @@
 
 ### P1 — Should implement for sovereignty / resilience
 
-7. Real compensation handlers in Arca Flow.
-8. SLA/approval-deadline watchdog in Arca Flow.
-9. Persistent SQL store + migrations in Arca Hub.
-10. Upstream resilience (circuit breaker + retry) in Arca Hub.
-11. Field-level encryption for justifications / sensitive evidence.
-12. Contract conformance tests across all modules.
+7. SLA/approval-deadline watchdog in Arca Flow.
+8. Persistent SQL store + migrations in Arca Hub.
+9. Upstream resilience (circuit breaker + retry) in Arca Hub.
+10. Field-level encryption for justifications / sensitive evidence.
+11. Contract conformance tests across all modules.
 
 ### P2 — Could have / industrialization
 
