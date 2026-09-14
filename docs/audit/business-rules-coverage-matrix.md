@@ -25,7 +25,7 @@
 | Evidence signing / hash chain | ❌ | ❌ | ❌ | ❌ | ✅ (report seal) | ✅ (dossier seal) | ❌ | ❌ |
 | Vault signing/encryption | ✅ (Transit signer) | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ (ref only) | ❌ |
 | OpenTelemetry instrumentation | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Contract conformance tests | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) |
+| Contract conformance tests | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Versioned DB migrations | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ---
@@ -164,7 +164,6 @@
 8. Persistent SQL store + migrations in Arca Hub.
 9. Upstream resilience (circuit breaker + retry) in Arca Hub.
 10. Field-level encryption for justifications / sensitive evidence.
-11. Contract conformance tests across all modules.
 
 ### P2 — Could have / industrialization
 
