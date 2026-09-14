@@ -26,7 +26,7 @@
 | Vault signing/encryption | ✅ (Transit signer) | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ (ref only) | ❌ |
 | OpenTelemetry instrumentation | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Contract conformance tests | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Versioned DB migrations | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Versioned DB migrations | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -176,13 +176,17 @@
 
 ## Recommended next actions
 
-This iteration shipped the three enterprise-grade rules:
+Shipped in the latest iterations:
 
 1. ✅ **Decision Room:** Vault-backed signing with production dev-signer blocking.
 2. ✅ **Arca Flow:** transactional SQL outbox with Kafka drain.
 3. ✅ **Arca Cert:** OOC governance gate before dossier publication.
+4. ✅ **Arca Trust:** durable Kafka outbox flush.
+5. ✅ **Arca Flow:** step timeout enforcement and real compensation handlers.
+6. ✅ **Cross-product:** contract conformance tests and versioned database migrations.
 
-Remaining P0 gaps to address next:
+Remaining P1 priorities to address next:
 
-- **Arca Flow:** step timeout enforcement and real compensation handlers.
-- **Cross-product:** contract conformance tests and versioned database migrations.
+- **Arca Flow:** SLA/approval-deadline watchdog.
+- **Arca Hub:** persistent SQL store + migrations and upstream resilience (circuit breaker / retry).
+- **Cross-product:** field-level encryption for justifications and sensitive evidence.
