@@ -100,7 +100,7 @@
 | Report seal & validity | ✅ | SHA-256 + 90-day window |
 | Compliance scoring | ✅ | `compliance_service.py` |
 | Risk scoring | ✅ | Diminishing returns formula |
-| Kafka outbox flush | ❌ | Events created, not published |
+| Kafka outbox flush | ✅ | Transactional SQL outbox + `OutboxDrainer` to Kafka |
 | Score staleness alerting | ❌ | Not implemented |
 | Retention enforcement | ❌ | Documented only |
 | mTLS/SPIFFE | ❌ | Not implemented |
@@ -155,7 +155,7 @@
 2. **Step retry policy in Arca Flow** — `StepExecution.attempt` must be used; per-step `max_retries` must be enforced before compensation.
 3. **Rate limiting in Arca Hub** — ADR-002 mandates `429` + `Retry-After` for cockpit endpoints.
 4. **Vault signing/encryption** — ✅ Decision Room uses `VaultTransitSigner`; remaining products still use dev signers or plaintext fields.
-5. **Kafka outbox flush in Arca Trust** — certification events must be durably published.
+5. **Kafka outbox flush in Arca Trust** — ✅ implemented and tested.
 6. **OOC governance gate in Arca Cert** — ✅ implemented and tested.
 
 ### P1 — Should implement for sovereignty / resilience
@@ -186,6 +186,5 @@ This iteration shipped the three enterprise-grade rules:
 
 Remaining P0 gaps to address next:
 
-- **Arca Trust:** Kafka outbox flush for durable score/certification events.
 - **Arca Flow:** step timeout enforcement and real compensation handlers.
 - **Cross-product:** contract conformance tests and versioned database migrations.
