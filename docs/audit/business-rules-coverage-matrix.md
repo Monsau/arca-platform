@@ -75,7 +75,7 @@
 | OpenMetadata lineage export | ⚠️ | Flag respected; HTTP push stubbed |
 | Persistent SQL store | ✅ | `Store` + `HubRepository` with QueryEvent/ViewCache tables |
 | Rate limiting | ❌ | No middleware |
-| Upstream resilience (CB/retry) | ❌ | 5s hardcoded timeout |
+| Upstream resilience (CB/retry) | ✅ | `CircuitBreaker` + retries with exponential backoff in `HttpUpstreamClient` |
 | Approval write-through to ArcaFlow | ❌ | Local record only |
 | Cache invalidation on events | ❌ | TTL only |
 
@@ -160,8 +160,7 @@
 
 ### P1 — Should implement for sovereignty / resilience
 
-7. Upstream resilience (circuit breaker + retry) in Arca Hub.
-8. Field-level encryption for justifications / sensitive evidence.
+7. Field-level encryption for justifications / sensitive evidence.
 
 ### P2 — Could have / industrialization
 
