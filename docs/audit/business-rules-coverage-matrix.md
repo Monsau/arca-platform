@@ -60,7 +60,7 @@
 | Step retry policy | ✅ | `max_retries` enforced before compensation; `flow.step.retrying` emitted |
 | Step timeout | ✅ | Per-step `timeout_seconds` + `TimeoutWatchdog` + `flow.step.timeout` |
 | Real compensation actions | ✅ | `CompensationExecutor` invoked per compensated step; evidence + event emitted |
-| SLA/approval-deadline watchdog | ❌ | On-demand check only |
+| SLA/approval-deadline watchdog | ✅ | Per-step `approval_timeout_seconds` + `ApprovalDeadlineWatchdog` |
 | Multi-party approval quorum | ❌ | One approval per step |
 | Workflow definition immutability | ❌ | No deprecation/upgrade policy |
 
@@ -160,10 +160,9 @@
 
 ### P1 — Should implement for sovereignty / resilience
 
-7. SLA/approval-deadline watchdog in Arca Flow.
-8. Persistent SQL store + migrations in Arca Hub.
-9. Upstream resilience (circuit breaker + retry) in Arca Hub.
-10. Field-level encryption for justifications / sensitive evidence.
+7. Persistent SQL store + migrations in Arca Hub.
+8. Upstream resilience (circuit breaker + retry) in Arca Hub.
+9. Field-level encryption for justifications / sensitive evidence.
 
 ### P2 — Could have / industrialization
 
