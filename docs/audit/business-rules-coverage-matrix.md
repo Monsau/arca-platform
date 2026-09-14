@@ -73,7 +73,7 @@
 | Timeline / lineage builder | ✅ | Event-driven graph |
 | Trust/risk/cost scoring | ✅ | `trust.py`, `overview.py` |
 | OpenMetadata lineage export | ⚠️ | Flag respected; HTTP push stubbed |
-| Persistent SQL store | ❌ | `Store` is `NotImplementedError` |
+| Persistent SQL store | ✅ | `Store` + `HubRepository` with QueryEvent/ViewCache tables |
 | Rate limiting | ❌ | No middleware |
 | Upstream resilience (CB/retry) | ❌ | 5s hardcoded timeout |
 | Approval write-through to ArcaFlow | ❌ | Local record only |
@@ -160,9 +160,8 @@
 
 ### P1 — Should implement for sovereignty / resilience
 
-7. Persistent SQL store + migrations in Arca Hub.
-8. Upstream resilience (circuit breaker + retry) in Arca Hub.
-9. Field-level encryption for justifications / sensitive evidence.
+7. Upstream resilience (circuit breaker + retry) in Arca Hub.
+8. Field-level encryption for justifications / sensitive evidence.
 
 ### P2 — Could have / industrialization
 
