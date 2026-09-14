@@ -23,7 +23,7 @@
 | Request idempotency | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Audit / immutable ledger | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) |
 | Evidence signing / hash chain | ❌ | ❌ | ❌ | ❌ | ✅ (report seal) | ✅ (dossier seal) | ❌ | ❌ |
-| Vault signing/encryption | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ (ref only) | ❌ |
+| Vault signing/encryption | ✅ (Transit signer) | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ (ref only) | ❌ |
 | OpenTelemetry instrumentation | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Contract conformance tests | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) | ❌ (skipped) |
 | Versioned DB migrations | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
@@ -41,6 +41,7 @@
 | Override justification | ✅ | Non-empty justification enforced |
 | Sealing immutability | ✅ | Frozen package + sealed-row guard |
 | Review verdict gate | ✅ | `UNFAVORABLE` review blocks sealing unless override recorded |
+| Vault-backed signing / sealing | ✅ | `VaultTransitSigner`; dev signer blocked in production |
 | Workspace role enforcement | ❌ | Roles stored but not interpreted |
 | Vote signature verification | ❌ | Field exists, never verified |
 | Field-level encryption | ❌ | Justifications plaintext |
@@ -54,6 +55,7 @@
 | HITL approval gate | ✅ | `engine.py` |
 | Compensation (status) | ✅ | Marks instances/steps cancelled |
 | Evidence binding | ✅ | Per-transition evidence rows |
+| Transactional SQL outbox + Kafka drain | ✅ | `OutboxEventRow` persisted with instance, `OutboxDrainer` flush |
 | OOC contract gate | ✅ | Feature-flagged HTTP client |
 | Step retry policy | ✅ | `max_retries` enforced before compensation; `flow.step.retrying` emitted |
 | Step timeout | ❌ | No timeout enforcement |
@@ -111,7 +113,7 @@
 | Seal & tamper detection | ✅ | `verify_seal()` |
 | Readiness scoring | ✅ | Threshold 0.7 default |
 | Remediation planning | ✅ | Per-dimension actions |
-| OOC governance gate before publish | ❌ | No OOC check |
+| OOC governance gate before publish | ✅ | `HttpOOCGateClient`; blocks `publish_dossier` when not approved |
 | Multi-reviewer approval | ❌ | Single reviewer |
 | Immutable audit log | ❌ | In-memory SOC |
 | GraphQL RBAC | ❌ | No permission checks |
@@ -152,9 +154,9 @@
 1. **Review-verdict gate in Decision Room** — `UNFAVORABLE` expert review must block sealing unless an override is recorded.
 2. **Step retry policy in Arca Flow** — `StepExecution.attempt` must be used; per-step `max_retries` must be enforced before compensation.
 3. **Rate limiting in Arca Hub** — ADR-002 mandates `429` + `Retry-After` for cockpit endpoints.
-4. **Vault signing/encryption** — Decision Room, Flow, Hub, Exchange, Trust, Cert all rely on dev signers or plaintext fields.
+4. **Vault signing/encryption** — ✅ Decision Room uses `VaultTransitSigner`; remaining products still use dev signers or plaintext fields.
 5. **Kafka outbox flush in Arca Trust** — certification events must be durably published.
-6. **OOC governance gate in Arca Cert** — publication must be blocked without OOC approval.
+6. **OOC governance gate in Arca Cert** — ✅ implemented and tested.
 
 ### P1 — Should implement for sovereignty / resilience
 
@@ -176,10 +178,14 @@
 
 ## Recommended next actions
 
-This iteration focuses on the three highest-priority, testable rules:
+This iteration shipped the three enterprise-grade rules:
 
-1. **Decision Room:** implement review-verdict gate.
-2. **Arca Flow:** implement per-step retry policy.
-3. **Arca Hub:** implement rate-limiting middleware.
+1. ✅ **Decision Room:** Vault-backed signing with production dev-signer blocking.
+2. ✅ **Arca Flow:** transactional SQL outbox with Kafka drain.
+3. ✅ **Arca Cert:** OOC governance gate before dossier publication.
 
-Each rule is small enough to ship with tests in one iteration while materially reducing governance and resilience risk.
+Remaining P0 gaps to address next:
+
+- **Arca Trust:** Kafka outbox flush for durable score/certification events.
+- **Arca Flow:** step timeout enforcement and real compensation handlers.
+- **Cross-product:** contract conformance tests and versioned database migrations.
