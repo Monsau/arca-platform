@@ -75,7 +75,7 @@
 | Trust/risk/cost scoring | ✅ | `trust.py`, `overview.py` |
 | OpenMetadata lineage export | ⚠️ | Flag respected; HTTP push stubbed |
 | Persistent SQL store | ✅ | `Store` + `HubRepository` with QueryEvent/ViewCache tables |
-| Rate limiting | ❌ | No middleware |
+| Rate limiting | ✅ | `RateLimitMiddleware` with sliding window, 429 + Retry-After, public paths excluded |
 | Upstream resilience (CB/retry) | ✅ | `CircuitBreaker` + retries with exponential backoff in `HttpUpstreamClient` |
 | Approval write-through to ArcaFlow | ❌ | Local record only |
 | Cache invalidation on events | ❌ | TTL only |
@@ -154,7 +154,7 @@
 
 1. **Review-verdict gate in Decision Room** — `UNFAVORABLE` expert review must block sealing unless an override is recorded.
 2. **Step retry policy in Arca Flow** — `StepExecution.attempt` must be used; per-step `max_retries` must be enforced before compensation.
-3. **Rate limiting in Arca Hub** — ADR-002 mandates `429` + `Retry-After` for cockpit endpoints.
+3. **Rate limiting in Arca Hub** — ✅ `RateLimitMiddleware` returns `429` + `Retry-After` for cockpit endpoints.
 4. **Vault signing/encryption** — ✅ Decision Room, Arca Flow, Arca Trust and Arca Cert use Vault Transit; remaining products still use dev signers or plaintext fields.
 5. **Kafka outbox flush in Arca Trust** — ✅ implemented and tested.
 6. **OOC governance gate in Arca Cert** — ✅ implemented and tested.
@@ -184,6 +184,7 @@ Shipped in the latest iterations:
 6. ✅ **Cross-product:** contract conformance tests and versioned database migrations.
 7. ✅ **Decision Room / Arca Flow:** field-level encryption for justifications, rationale, scenario notes and sensitive evidence.
 8. ✅ **Arca Trust / Arca Cert:** Vault Transit signing for reports and dossiers with dev-signer production blocking.
+9. ✅ **Arca Hub:** rate-limiting middleware with sliding window and `429` + `Retry-After`.
 
 Remaining P1 priorities to address next:
 
