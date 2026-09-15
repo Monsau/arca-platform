@@ -23,7 +23,7 @@
 | Request idempotency | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Audit / immutable ledger | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) |
 | Evidence signing / hash chain | ❌ | ❌ | ❌ | ❌ | ✅ (report seal) | ✅ (dossier seal) | ❌ | ❌ |
-| Vault signing/encryption | ✅ (Transit signer) | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ (ref only) | ❌ |
+| Vault signing/encryption | ✅ (Transit signer) | ✅ (Transit field encryption) | ❌ | ❌ | ❌ | ❌ | ⚠️ (ref only) | ❌ |
 | OpenTelemetry instrumentation | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Contract conformance tests | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Versioned DB migrations | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -44,7 +44,7 @@
 | Vault-backed signing / sealing | ✅ | `VaultTransitSigner`; dev signer blocked in production |
 | Workspace role enforcement | ❌ | Roles stored but not interpreted |
 | Vote signature verification | ❌ | Field exists, never verified |
-| Field-level encryption | ❌ | Justifications plaintext |
+| Field-level encryption | ✅ | Override justifications, rationale and scenario notes encrypted at rest; Vault Transit in production, Fernet dev fallback blocked in production |
 | Retention enforcement | ❌ | Documented only |
 
 ### Arca Flow
@@ -61,6 +61,7 @@
 | Step timeout | ✅ | Per-step `timeout_seconds` + `TimeoutWatchdog` + `flow.step.timeout` |
 | Real compensation actions | ✅ | `CompensationExecutor` invoked per compensated step; evidence + event emitted |
 | SLA/approval-deadline watchdog | ✅ | Per-step `approval_timeout_seconds` + `ApprovalDeadlineWatchdog` |
+| Field-level encryption | ✅ | Sensitive evidence (`kind == 'sensitive'`) encrypted at rest; Vault Transit in production, Fernet dev fallback blocked in production |
 | Multi-party approval quorum | ❌ | One approval per step |
 | Workflow definition immutability | ❌ | No deprecation/upgrade policy |
 
@@ -160,7 +161,7 @@
 
 ### P1 — Should implement for sovereignty / resilience
 
-7. Field-level encryption for justifications / sensitive evidence.
+7. ✅ Field-level encryption for justifications / sensitive evidence.
 
 ### P2 — Could have / industrialization
 
@@ -181,6 +182,7 @@ Shipped in the latest iterations:
 4. ✅ **Arca Trust:** durable Kafka outbox flush.
 5. ✅ **Arca Flow:** step timeout enforcement and real compensation handlers.
 6. ✅ **Cross-product:** contract conformance tests and versioned database migrations.
+7. ✅ **Decision Room / Arca Flow:** field-level encryption for justifications, rationale, scenario notes and sensitive evidence.
 
 Remaining P1 priorities to address next:
 
