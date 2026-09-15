@@ -23,7 +23,7 @@
 | Request idempotency | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Audit / immutable ledger | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) | ⚠️ (in-memory SOC) |
 | Evidence signing / hash chain | ❌ | ❌ | ❌ | ❌ | ✅ (report seal) | ✅ (dossier seal) | ❌ | ❌ |
-| Vault signing/encryption | ✅ (Transit signer) | ✅ (Transit field encryption) | ❌ | ❌ | ❌ | ❌ | ⚠️ (ref only) | ❌ |
+| Vault signing/encryption | ✅ (Transit signer) | ✅ (Transit field encryption) | ❌ | ❌ | ✅ (Transit report signer) | ✅ (Transit dossier signer) | ⚠️ (ref only) | ❌ |
 | OpenTelemetry instrumentation | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Contract conformance tests | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Versioned DB migrations | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -155,7 +155,7 @@
 1. **Review-verdict gate in Decision Room** — `UNFAVORABLE` expert review must block sealing unless an override is recorded.
 2. **Step retry policy in Arca Flow** — `StepExecution.attempt` must be used; per-step `max_retries` must be enforced before compensation.
 3. **Rate limiting in Arca Hub** — ADR-002 mandates `429` + `Retry-After` for cockpit endpoints.
-4. **Vault signing/encryption** — ✅ Decision Room uses `VaultTransitSigner`; remaining products still use dev signers or plaintext fields.
+4. **Vault signing/encryption** — ✅ Decision Room, Arca Flow, Arca Trust and Arca Cert use Vault Transit; remaining products still use dev signers or plaintext fields.
 5. **Kafka outbox flush in Arca Trust** — ✅ implemented and tested.
 6. **OOC governance gate in Arca Cert** — ✅ implemented and tested.
 
@@ -183,6 +183,7 @@ Shipped in the latest iterations:
 5. ✅ **Arca Flow:** step timeout enforcement and real compensation handlers.
 6. ✅ **Cross-product:** contract conformance tests and versioned database migrations.
 7. ✅ **Decision Room / Arca Flow:** field-level encryption for justifications, rationale, scenario notes and sensitive evidence.
+8. ✅ **Arca Trust / Arca Cert:** Vault Transit signing for reports and dossiers with dev-signer production blocking.
 
 Remaining P1 priorities to address next:
 
