@@ -14,6 +14,7 @@ Conséquences contraignantes, déjà validées dans `docs/integration/arcaq-link
 2. **Pattern d'intégration unique** : `Protocol` + implémentation `Null` (désactivée par défaut) + implémentation `Http` opt-in par feature flag, timeout court, dégradation gracieuse — jamais de blocage métier si un produit est absent.
 3. **Ontologies : référencer, ne jamais redéfinir** — un seul namespace `http://arcaq.com/ontology#` ; les instances cœur (`Jurisdiction_MA`, `Jurisdiction_FR`, `Regulation_Loi0908_MA`, RGPD…) se référencent, jamais se re-déclarent ; pas de namespace par territoire.
 4. **Un produit ne dépend pas de la Suite pour exister** — ArcaQ et ArcaX restent autonomes et commercialisables seuls ; la Suite ajoute la valeur de composition.
+5. **Correction complète = double-loop** — toute révision de règle embarque dans le même changement : modèle + contrat (SHACL/OpenAPI) + données + gate qui les applique. Une révision qui reste dans un document pendant que les systèmes appliquent l'ancienne règle n'est pas une correction.
 
 ---
 
@@ -54,6 +55,7 @@ Livrables :
 1. `arca-bench` rejoue les **décisions scellées** et vérifie le quorum **indépendamment** des événements émis (reconstruction à partir des artefacts scellés, pas du flux).
 2. Un test bench croise au moins un événement métier avec une preuve externe avant qu'il n'alimente un score Trust.
 3. Le seul score qui compte est celui qu'un module ne peut pas s'auto-émettre.
+4. **Critère « AI removes the pause »** : toute action auto-déclenchée embarque les concepts, sources et règles utilisés (pas seulement une trace d'événement) — une explication fluide ne prouve rien sur ce qui a été réellement utilisé.
 
 Critères d'acceptation : supprimer artificiellement un événement d'audit en amont fait échouer le bench (test de falsification).
 
@@ -81,7 +83,8 @@ Règle désormais obligatoire pour tout futur pack : **conformance = RDF+SHACL**
 Livrables :
 1. `arca-platform/contracts` devient le **seul référentiel de schémas côté Suite** (son rôle déclaré) ; les SOC embarqués des modules n'émettent qu'au format du shared-kernel.
 2. Adopter la règle d'import public d'ArcaX : seuls des packages/contrats publics versionnés sont importables, jamais de sous-module interne.
-3. Documenter la frontière : côté Suite → `arca-platform` est source de vérité ; côté produits → ArcaQ (`arcaq-kafka-topics`) et ArcaX restent autonomes (EP règle d'or n°4). La Suite n'unifie pas les produits entre eux, elle s'unifie elle-même.
+3. **Principe bounded contexts** : l'unification ne crée pas un schéma universel unique — elle construit des *contrats de traduction explicites* entre contextes (les contextes métier gardent leurs distinctions ; la traduction se fait délibérément, pas par accident). Un namespace d'identification partagé ≠ une définition unique forcée.
+4. Documenter la frontière : côté Suite → `arca-platform` est source de vérité ; côté produits → ArcaQ (`arcaq-kafka-topics`) et ArcaX restent autonomes (EP règle d'or n°4). La Suite n'unifie pas les produits entre eux, elle s'unifie elle-même.
 
 ## EP-07 — Recherche sémantique ArcaQ dans le cockpit
 
