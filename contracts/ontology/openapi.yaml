@@ -1,0 +1,42 @@
+openapi: 3.1.0
+info:
+  title: Arca Platform Ontology Write Contract
+  version: 1.0.0
+  description: |
+    Suite-side client surface of the ArcaQ centralized ontology write funnel.
+    Suite modules POST change proposals to ArcaQ (single physical writer);
+    authorization is resolved by ArcaQ's central PDP on the forwarded caller
+    identity; every Suite-originated submission carries entry_point="suite".
+    Product-side source of truth: arcaq-api ontology_ops router.
+
+paths:
+  /api/v1/ontology-ops/change-proposals:
+    post:
+      summary: Submit an ontology change proposal (centralized write funnel)
+      operationId: submitChangeProposal
+      description: |
+        Entry-point provenance: the Suite adapter always sends
+        entry_point="suite". The value is closed ("direct" | "suite") and
+        enforced by ArcaQ at the API, at deployment (SHACL gate) and in CI.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../../schemas/ontology/change-proposal-request-schema.json'
+      responses:
+        '201':
+          description: Proposal created (state=draft)
+          content:
+            application/json:
+              schema:
+                $ref: '../../schemas/ontology/change-proposal-response-schema.json'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized — resolved by ArcaQ's central PDP
+        '422':
+          description: |
+            Constraint violation — invalid Turtle syntax, unknown
+            change_type/impact_level/entry_point, or SHACL contract violation
+            detected at submit time.

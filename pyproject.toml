@@ -21,6 +21,7 @@ services = [
 ]
 messaging = ["kafka-python-ng>=2.0"]
 observability = ["opentelemetry-api>=1.24", "opentelemetry-sdk>=1.24"]
+ontology = ["httpx>=0.27"]
 tests = ["pytest>=8.0", "httpx>=0.27"]
 
 [tool.pytest.ini_options]
