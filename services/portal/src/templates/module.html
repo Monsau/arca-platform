@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ module.name }} — Arca Suite{% endblock %}
+{% block heading %}{{ module.name }}{% endblock %}
+{% block subheading %}{{ module.description }}{% endblock %}
+{% block content %}
+  {# The module serves its own UI through the authenticated proxy; the
+     frame keeps the portal chrome (navigation, identity) around it and
+     the address bar stays on the portal — no /ui/ URLs leak to users. #}
+  <iframe class="module-frame" src="/m/{{ module.key }}/{{ module.ui_base.lstrip('/') }}"
+          title="{{ module.name }}"></iframe>
+{% endblock %}

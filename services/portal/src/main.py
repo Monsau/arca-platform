@@ -1,0 +1,185 @@
+"""Arca Suite Portal — FastAPI application.
+
+Routes:
+  /                    shell overview (module health from live probes)
+  /m/<key>/<path>      authenticated reverse proxy to a suite module
+  /auth/login|callback|logout   Keycloak OIDC flow
+"""
+from __future__ import annotations
+
+import logging
+import secrets
+from pathlib import Path
+
+import httpx
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from .auth import AuthError, OIDCClient, SessionStore
+from .config import Settings, load_modules
+from .proxy import ModuleProxy
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+BASE_DIR = Path(__file__).resolve().parent
+
+settings = Settings()
+modules = {m.key: m for m in load_modules()}
+store = SessionStore(settings.redis_url, settings.session_ttl_seconds)
+auth = OIDCClient(settings, store)
+proxy = ModuleProxy()
+probe_client = httpx.AsyncClient(timeout=httpx.Timeout(4.0, connect=2.0))
+
+app = FastAPI(title="Arca Suite Portal", version="0.1.0", docs_url=None, redoc_url=None)
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+# Transient OIDC state (single-process; login handled by one replica behind
+# the shell's single-replica deployment — see portal.md operations note).
+_pending_states: set[str] = set()
+
+
+def _session(request: Request) -> dict | None:
+    return auth.load_session(request.cookies.get(settings.session_cookie))
+
+
+def _require_session(request: Request) -> dict:
+    session = _session(request)
+    if not session:
+        raise HTTPException(status_code=401, detail="authentication required")
+    return session
+
+
+@app.get("/healthz")
+async def healthz() -> dict:
+    return {"status": "healthy", "oidc_configured": settings.configured}
+
+
+@app.get("/auth/login")
+async def login(request: Request) -> Response:
+    if not settings.configured:
+        return HTMLResponse(_not_configured(), status_code=500)
+    state = secrets.token_urlsafe(16)
+    _pending_states.add(state)
+    return RedirectResponse(auth.authorize_redirect(state))
+
+
+@app.get("/auth/callback")
+async def callback(request: Request, state: str = "", code: str = "") -> Response:
+    if state not in _pending_states:
+        raise HTTPException(status_code=400, detail="invalid state")
+    _pending_states.discard(state)
+    if not code:
+        raise HTTPException(status_code=400, detail="missing code")
+    try:
+        result = await auth.exchange_code(code)
+    except AuthError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    sid = auth.create_session(result["tokens"], result["claims"])
+    resp = RedirectResponse("/", status_code=303)
+    resp.set_cookie(
+        settings.session_cookie,
+        auth.encode_cookie(sid),
+        max_age=settings.session_ttl_seconds,
+        httponly=True,
+        samesite="lax",
+        secure=request.url.scheme == "https",
+    )
+    return resp
+
+
+@app.get("/auth/logout")
+async def logout(request: Request) -> Response:
+    id_token_hint = auth.destroy_session(request.cookies.get(settings.session_cookie))
+    params = {"client_id": settings.oidc_client_id}
+    if id_token_hint:
+        params["id_token_hint"] = id_token_hint
+    if settings.public_base_url:
+        params["post_logout_redirect_uri"] = settings.public_base_url
+    resp = RedirectResponse(f"{settings.end_session_url}?{httpx.QueryParams(params)}")
+    resp.delete_cookie(settings.session_cookie)
+    return resp
+
+
+@app.get("/", response_class=HTMLResponse)
+async def overview(request: Request) -> Response:
+    session = _session(request)
+    if not session:
+        return RedirectResponse("/auth/login")
+    claims = session.get("claims", {})
+    statuses = await _probe_modules()
+    return templates.TemplateResponse(
+        request,
+        "overview.html",
+        {
+            "user": claims,
+            "modules": [dict(key=m.key, name=m.name, icon=m.icon, description=m.description) for m in modules.values()],
+            "statuses": statuses,
+        },
+    )
+
+
+@app.get("/m/{key}/{rest:path}")
+async def module_proxy(key: str, rest: str, request: Request) -> Response:
+    session = _require_session(request)
+    module = modules.get(key)
+    if not module:
+        raise HTTPException(status_code=404, detail="unknown module")
+    # Strip the leading ui_base so the module receives its native paths,
+    # then re-inject it: modules expect to be served under their ui_base.
+    ui_base = module.ui_base.rstrip("/")
+    path = "/" + rest if rest else "/"
+    if not path.startswith(ui_base + "/") and path != ui_base and ui_base:
+        path = ui_base + (path if path.startswith("/") else "/" + path)
+    return await proxy.forward(module, path, request, session["access_token"])
+
+
+async def _probe_modules() -> dict[str, dict]:
+    """Live health of every module — real probes, honest failures."""
+    statuses: dict[str, dict] = {}
+
+    async def probe(key: str, service: str) -> None:
+        url = f"{service.rstrip('/')}/healthz"
+        try:
+            resp = await probe_client.get(url)
+            statuses[key] = {"ok": resp.status_code < 500, "status": resp.status_code}
+        except httpx.TransportError as exc:
+            statuses[key] = {"ok": False, "status": str(exc)[:60]}
+
+    import asyncio
+
+    await asyncio.gather(*(probe(m.key, m.service) for m in modules.values()))
+    return statuses
+
+
+def _not_configured() -> str:
+    return (
+        "<h1>Portal OIDC is not configured</h1>"
+        "<p>Set PORTAL_OIDC_ISSUER, PORTAL_OIDC_CLIENT_SECRET and "
+        "PORTAL_OIDC_REDIRECT_URI.</p>"
+    )
+
+
+@app.get("/module/{key}", response_class=HTMLResponse)
+async def module_frame(key: str, request: Request) -> Response:
+    """Shell page hosting one module in a fluid full-size frame."""
+    session = _session(request)
+    if not session:
+        return RedirectResponse("/auth/login")
+    module = modules.get(key)
+    if not module:
+        raise HTTPException(status_code=404, detail="unknown module")
+    claims = session.get("claims", {})
+    return templates.TemplateResponse(
+        request,
+        "module.html",
+        {
+            "user": claims,
+            "active": key,
+            "module": module,
+            "modules": [dict(key=m.key, name=m.name, icon=m.icon, description=m.description) for m in modules.values()],
+        },
+    )
