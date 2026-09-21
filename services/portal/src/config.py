@@ -17,6 +17,11 @@ class Settings:
     oidc_client_id: str = field(default_factory=lambda: _env("PORTAL_OIDC_CLIENT_ID", "arca-suite-portal"))
     oidc_client_secret: str = field(default_factory=lambda: _env("PORTAL_OIDC_CLIENT_SECRET"))
     oidc_redirect_uri: str = field(default_factory=lambda: _env("PORTAL_OIDC_REDIRECT_URI"))
+    # Back-channel endpoints may be overridden for in-cluster reachability:
+    # the issuer stays the public URL (iss claim + authorize redirect), while
+    # token/JWKS calls use a cluster-routable URL (plain HTTP service).
+    oidc_token_url: str = field(default_factory=lambda: _env("PORTAL_OIDC_TOKEN_URL", ""))
+    oidc_jwks_url: str = field(default_factory=lambda: _env("PORTAL_OIDC_JWKS_URL", ""))
     # Session cookie signing — generated per process when unset (sessions
     # invalidate on restart; set PORTAL_SESSION_SECRET for stability).
     session_secret: str = field(default_factory=lambda: _env("PORTAL_SESSION_SECRET"))
@@ -33,11 +38,11 @@ class Settings:
 
     @property
     def jwks_url(self) -> str:
-        return f"{self.issuer}/protocol/openid-connect/certs"
+        return self.oidc_jwks_url or f"{self.issuer}/protocol/openid-connect/certs"
 
     @property
     def token_url(self) -> str:
-        return f"{self.issuer}/protocol/openid-connect/token"
+        return self.oidc_token_url or f"{self.issuer}/protocol/openid-connect/token"
 
     @property
     def authorize_url(self) -> str:
