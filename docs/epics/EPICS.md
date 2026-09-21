@@ -29,7 +29,7 @@ Binding consequences, already validated in `docs/integration/arcaq-linkage-audit
 | EP-06 | Transverse schema unification (SOC, topics, shared-kernel, OLM/OOC, provenance) | P1 | Planned |
 | EP-07 | ArcaQ semantic search in the cockpit | P1 | Planned |
 | EP-08 | Claimed metrics under reproducible methodology | P2 | Planned |
-| EP-09 | Ontology write centralization (Suite → ArcaQ change proposals) | P0 | In progress (adapter + contract merged in arca-platform; adoptions merged: arca-hub cockpit, arca-packs install, arca-flow definitions, arca-exchange ontology assets) |
+| EP-09 | Ontology write centralization (Suite → ArcaQ change proposals) | P0 | **Done** (2026-09-21 — adapter + contract merged in arca-platform; all 5 module adoptions merged: arca-hub cockpit, arca-packs install, arca-flow definitions, arca-exchange ontology assets, arca-studio unmapped concepts) |
 
 ---
 
@@ -96,7 +96,7 @@ Deliverables:
 
 ## EP-09 — Ontology write centralization (Suite → ArcaQ change proposals)
 
-**Status: in progress** (adapter, contract and schemas merged in arca-platform; four module adoptions merged: arca-hub, arca-packs, arca-flow, arca-exchange).
+**Status: Done (2026-09-21).** Adapter, contract and schemas merged in arca-platform; all five module adoptions merged: arca-hub, arca-packs, arca-flow, arca-exchange, arca-studio.
 
 Born from the multi-entry-point architecture constraint (2026-09-20): the ontology will be fed centrally through the Suite **in addition to** direct ArcaQ usage. There will be several logical entry points for the same actions, under **identical permission management propagated across the Suite**.
 
@@ -111,7 +111,7 @@ Binding rules (extend golden rule #3 "reference, never redefine" to writes):
 Deliverables:
 1. `adapters/ontology/` — `OntologyWriteAdapter` Protocol + `NullOntologyWriteAdapter` + `ArcaqOntologyWriteAdapter` (Http), opt-in via `ARCA_ONTOLOGY_WRITE_ADAPTER`. ✅ merged in arca-platform.
 2. `contracts/ontology/` + `schemas/ontology/` — versioned OpenAPI + JSON schemas of the change-proposal surface. ✅ merged in arca-platform.
-3. Per-module adoption: every module that produces ontology changes routes them through the adapter (flagged in module audits; e.g. cockpit contributions, pack workflows). ✅ adoptions: `arca-hub` cockpit (arca-hub PR #3) — `POST /api/v1/ontology/change-proposals`; `arca-packs` install (arca-packs PR #5, ADR-009) — pack ontology artifacts proposed to the funnel with `entry_point="suite"` on real installs; `arca-flow` definitions (arca-flow PR #2, ADR-010) — every workflow definition registration proposes its OLM entity (`WorkflowDefinition_<slug>`) to the funnel, with the raw `Authorization` header forwarded verbatim from both REST and MCP, outcome recorded per definition and audited as `ontology.change_proposed`; `arca-exchange` ontology assets (arca-exchange PR #2, ADR-010) — every ontology asset submission proposes `OntologyAsset_<slug>` (`add_class`/minor for a new entity, `add_property`/patch for an additional version), raw `Authorization` forwarded from REST and MCP, outcome recorded per asset and audited in the SOC collector under the submission correlation id.
+3. Per-module adoption: every module that produces ontology changes routes them through the adapter (flagged in module audits; e.g. cockpit contributions, pack workflows). ✅ **all 5 modules adopted (2026-09-21)**: `arca-hub` cockpit (arca-hub PR #3) — `POST /api/v1/ontology/change-proposals`; `arca-packs` install (arca-packs PR #5, ADR-009) — pack ontology artifacts proposed to the funnel with `entry_point="suite"` on real installs; `arca-flow` definitions (arca-flow PR #2, ADR-010) — every workflow definition registration proposes its OLM entity (`WorkflowDefinition_<slug>`) to the funnel, with the raw `Authorization` header forwarded verbatim from both REST and MCP, outcome recorded per definition and audited as `ontology.change_proposed`; `arca-exchange` ontology assets (arca-exchange PR #2, ADR-010) — every ontology asset submission proposes `OntologyAsset_<slug>` (`add_class`/minor for a new entity, `add_property`/patch for an additional version), raw `Authorization` forwarded from REST and MCP, outcome recorded per asset and audited in the SOC collector under the submission correlation id; `arca-studio` unmapped concepts (arca-studio PR #1, ADR-011) — every unmapped use-case concept (`ooc_class is None`) is proposed as `Concept_<slug>` (`add_class`/minor), mapped concepts never touch the funnel, raw `Authorization` forwarded from REST and MCP, outcome recorded per `(project, concept)` and audited in the embedded SOC.
 
 Acceptance criteria: Null test (disabled = no call, business flow unblocked) + Http test (contract payload validated, entry_point forced to "suite", identity forwarded verbatim); falsification = captured-request assertions proving no payload can reach ArcaQ through this adapter without `entry_point="suite"` and that identity propagation cannot be silently dropped.
 
