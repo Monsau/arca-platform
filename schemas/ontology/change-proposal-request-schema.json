@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca-platform/contracts/schemas/ontology/change-proposal-request-schema.json",
+  "title": "Ontology Change Proposal Request",
+  "description": "Suite-side client payload for POST /api/v1/ontology-ops/change-proposals. Mirrors the ArcaQ ChangeProposalIn model; product-side source of truth is arcaq-api.",
+  "type": "object",
+  "required": ["change_type", "concept_uri", "impact_level", "description", "entry_point"],
+  "additionalProperties": true,
+  "properties": {
+    "change_type": {
+      "type": "string",
+      "enum": ["add_class", "add_property", "modify_label", "deprecate", "delete"]
+    },
+    "concept_uri": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Full URI of the affected concept"
+    },
+    "impact_level": {
+      "type": "string",
+      "enum": ["patch", "minor", "major"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Human-readable description of the proposed change"
+    },
+    "proposed_ttl": {
+      "type": ["string", "null"],
+      "description": "Optional Turtle snippet; syntax validated at submit (HTTP 422 on invalid)"
+    },
+    "proposer": {
+      "type": ["string", "null"],
+      "description": "Optional explicit proposer identity; defaults to the authenticated caller at ArcaQ"
+    },
+    "entry_point": {
+      "type": "string",
+      "enum": ["direct", "suite"],
+      "default": "direct",
+      "description": "Surface that submitted the change. Always \"suite\" from Suite modules; \"direct\" for ArcaQ UI/API users."
+    }
+  }
+}

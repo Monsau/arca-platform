@@ -39,6 +39,10 @@ class PlatformSettings(BaseSettings):
     observability_adapter: str = Field(
         default="opentelemetry", description="Observability adapter name"
     )
+    ontology_write_adapter: str = Field(
+        default="null",
+        description="Ontology write adapter name (null | arcaq); opt-in per golden rule #2",
+    )
 
     @classmethod
     def load_from_file(cls, path: str | Path) -> "PlatformSettings":

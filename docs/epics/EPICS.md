@@ -2,8 +2,7 @@
 
 > Governance: this document is the single source of truth for Suite epics
 > (`arca-*`). Any change goes through a PR on `arca-platform`.
-> Last updated: 2026-09-20 — integration of the optimal analysis
-> (reward-hacking lens) and ArcaQ/ArcaX audit findings.
+> Last updated: 2026-09-21 — EP-09 ontology write centralization (multi-entry-point constraint)
 
 ## Golden rule — never break ArcaQ or ArcaX
 
@@ -30,6 +29,7 @@ Binding consequences, already validated in `docs/integration/arcaq-linkage-audit
 | EP-06 | Transverse schema unification (SOC, topics, shared-kernel, OLM/OOC, provenance) | P1 | Planned |
 | EP-07 | ArcaQ semantic search in the cockpit | P1 | Planned |
 | EP-08 | Claimed metrics under reproducible methodology | P2 | Planned |
+| EP-09 | Ontology write centralization (Suite → ArcaQ change proposals) | P0 | In progress (adapter + contract merged in arca-platform) |
 
 ---
 
@@ -93,6 +93,27 @@ Deliverables:
 ## EP-08 — Claimed metrics under reproducible methodology
 
 **Status: planned.** Every displayed metric (dashboards, README, badges) must point to: methodology + datasets + reproducible result, or be reworded as an unquantified claim. Applies internally (Suite) and as an external recommendation (product badges — see flaw register F-AQ-07).
+
+## EP-09 — Ontology write centralization (Suite → ArcaQ change proposals)
+
+**Status: in progress** (adapter, contract and schemas merged in arca-platform; per-module adoption planned).
+
+Born from the multi-entry-point architecture constraint (2026-09-20): the ontology will be fed centrally through the Suite **in addition to** direct ArcaQ usage. There will be several logical entry points for the same actions, under **identical permission management propagated across the Suite**.
+
+Binding rules (extend golden rule #3 "reference, never redefine" to writes):
+
+1. **ArcaQ remains the single physical writer** (Jena/Fuseki). Suite modules are *clients* of `POST /api/v1/ontology-ops/change-proposals` — never a second writer, so a single chain of custody is preserved.
+2. **Single policy decision point.** Authorization is never reimplemented Suite-side: the caller's `Authorization` header is forwarded verbatim and ArcaQ's central PDP resolves permissions for the caller's identity (ADR-006). The Suite propagates identity; it does not recreate policy.
+3. **Entry-point provenance is not caller-controlled.** The adapter always stamps `entry_point="suite"`; ArcaQ records it on the proposal and every `CE-*` change event, and OLM ChangeEvents carry `plm:entryPoint` (`direct`|`suite`) alongside `plm:triggeredBy` (actor identity) — arcaq PRs #2 and #4.
+4. **Gates are entry-point-independent.** Turtle syntax (422 at submit), SHACL contracts (409 at deployment), OLM lifecycle (semver, four-eyes, quorum) apply identically whatever the entry point.
+5. **Graceful degradation.** Null by default, short timeout, transport failure → `degraded` result; a down ArcaQ never blocks a Suite business flow.
+
+Deliverables:
+1. `adapters/ontology/` — `OntologyWriteAdapter` Protocol + `NullOntologyWriteAdapter` + `ArcaqOntologyWriteAdapter` (Http), opt-in via `ARCA_ONTOLOGY_WRITE_ADAPTER`. ✅ merged in arca-platform.
+2. `contracts/ontology/` + `schemas/ontology/` — versioned OpenAPI + JSON schemas of the change-proposal surface. ✅ merged in arca-platform.
+3. Per-module adoption: every module that produces ontology changes routes them through the adapter (flagged in module audits; e.g. cockpit contributions, pack workflows).
+
+Acceptance criteria: Null test (disabled = no call, business flow unblocked) + Http test (contract payload validated, entry_point forced to "suite", identity forwarded verbatim); falsification = captured-request assertions proving no payload can reach ArcaQ through this adapter without `entry_point="suite"` and that identity propagation cannot be silently dropped.
 
 ---
 

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca-platform/contracts/schemas/ontology/change-proposal-response-schema.json",
+  "title": "Ontology Change Proposal Response",
+  "description": "Proposal object returned by the ArcaQ write funnel on creation (HTTP 201).",
+  "type": "object",
+  "required": ["id", "change_type", "concept_uri", "impact_level", "description", "proposer", "state", "proposed_at", "entry_point"],
+  "additionalProperties": true,
+  "properties": {
+    "id": { "type": "string" },
+    "change_type": { "type": "string" },
+    "concept_uri": { "type": "string" },
+    "impact_level": { "type": "string" },
+    "description": { "type": "string" },
+    "proposed_ttl": { "type": ["string", "null"] },
+    "proposer": { "type": "string" },
+    "state": { "type": "string", "description": "Initial state is \"draft\"; lifecycle stays in ArcaQ." },
+    "proposed_at": { "type": "string" },
+    "entry_point": { "type": "string", "enum": ["direct", "suite"] },
+    "ttl_validation": {
+      "type": ["object", "null"],
+      "description": "Submit-time Turtle syntax + SHACL pre-check result"
+    },
+    "reviewed_by": { "type": ["string", "null"] },
+    "reviewed_at": { "type": ["string", "null"] },
+    "deployed_by": { "type": ["string", "null"] },
+    "deployed_at": { "type": ["string", "null"] },
+    "deploy_event_id": { "type": ["string", "null"], "description": "CE-* structured change event emitted at deployment" }
+  }
+}
