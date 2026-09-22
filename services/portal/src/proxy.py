@@ -1,10 +1,10 @@
 """Reverse proxy from the portal shell to suite module services.
 
 Every request under /m/<module>/... is forwarded to the module's in-cluster
-service. Phase 1 note: the caller's Keycloak access token is intentionally
-NOT attached yet — modules run with their dev auth bypass and would reject a
-foreign Bearer token. Phase 2 restores Bearer propagation once modules trust
-the shared Keycloak issuer.
+service. Security by design: the portal always attaches the user's Keycloak
+SSO access token (refreshed on expiry) as the Bearer credential — incoming
+Authorization headers from the browser are discarded so a module can never
+be reached with anything but the session's SSO identity.
 """
 from __future__ import annotations
 
@@ -51,20 +51,22 @@ class ModuleProxy:
             return f"/m/{module.key}{location}"
         return location
 
-    async def forward(self, module: Module, rest: str, request: Request) -> Response:
+    async def forward(self, module: Module, rest: str, request: Request,
+                      token: str = "") -> Response:
         base = module.service.rstrip("/")
         # rest already includes the ui_base prefix stripped by the caller.
         url = f"{base}{rest}"
-        # Phase 1: modules run with their dev auth bypass (AUTH_DISABLED=1)
-        # and reject a foreign Bearer token, so the caller's Keycloak token
-        # is NOT forwarded yet. Phase 2 (module Keycloak trust) will restore
-        # identity propagation end to end.
         headers = {
             k.lower(): v
             for k, v in request.headers.items()
             if k.lower() not in _HOP_BY_HOP and k.lower() not in ("host", "cookie", "authorization")
         }
         headers["x-arca-portal"] = "1"
+        if token:
+            # Security by design: the module call always carries the SSO
+            # access token of the portal session — never the browser's
+            # incoming Authorization header.
+            headers["authorization"] = f"Bearer {token}"
         body = await request.body()
         try:
             upstream_req = self._client.build_request(

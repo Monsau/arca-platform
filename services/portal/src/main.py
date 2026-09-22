@@ -122,9 +122,18 @@ async def overview(request: Request) -> Response:
     )
 
 
-@app.get("/m/{key}/{rest:path}")
+@app.api_route("/m/{key}/{rest:path}",
+               methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"])
 async def module_proxy(key: str, rest: str, request: Request) -> Response:
-    session = _require_session(request)
+    session = _session(request)
+    if not session:
+        raise HTTPException(status_code=401, detail="authentication required")
+    # Security by design: always forward the session's SSO access token
+    # (refreshed when close to expiry). No token, no call — modules reject
+    # anonymous requests, and so does the portal.
+    token = await auth.ensure_fresh_token(request.cookies.get(settings.session_cookie))
+    if not token:
+        raise HTTPException(status_code=401, detail="session expired — please sign in again")
     module = modules.get(key)
     if not module:
         raise HTTPException(status_code=404, detail="unknown module")
@@ -134,7 +143,7 @@ async def module_proxy(key: str, rest: str, request: Request) -> Response:
     # /m/<key>/api/... (see portal.md). Relative redirect Locations from the
     # module are rewritten back under /m/<key> by the proxy.
     path = "/" + rest if rest else "/"
-    return await proxy.forward(module, path, request)
+    return await proxy.forward(module, path, request, token=token)
 
 
 async def _probe_modules() -> dict[str, dict]:

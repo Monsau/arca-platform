@@ -198,3 +198,71 @@ class OIDCClient:
         if payload:
             return payload.get("id_token") or None
         return None
+
+    # -- token freshness (security by design) ---------------------------------
+    async def ensure_fresh_token(self, cookie_value: str | None) -> str | None:
+        """Return a usable SSO access token for the session, refreshing it
+        against Keycloak when it expires within the next 60 seconds.
+
+        Every proxied module call carries this token — modules never accept
+        anonymous requests, so the portal must never forward a stale or
+        missing credential. Returns None when there is no usable session.
+        """
+        sid = self.decode_cookie(cookie_value)
+        if not sid:
+            return None
+        payload = self.store.get(sid)
+        if not payload:
+            return None
+        access_token = payload.get("access_token", "")
+        expires_at = _unverified_exp(access_token)
+        if expires_at is not None and expires_at - time.time() > 60:
+            return access_token
+        refresh_token = payload.get("refresh_token", "")
+        if not refresh_token:
+            # No refresh token and the access token is expired (or invalid):
+            # the session can no longer prove identity — force re-login.
+            self.store.delete(sid)
+            return None
+        try:
+            resp = await self._http.post(
+                self.settings.token_url,
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": refresh_token,
+                    "client_id": self.settings.oidc_client_id,
+                    "client_secret": self.settings.oidc_client_secret,
+                },
+            )
+            if resp.status_code != 200:
+                self.store.delete(sid)
+                return None
+            tokens = resp.json()
+            payload.update(
+                {
+                    "access_token": tokens["access_token"],
+                    # Keycloak rotates refresh tokens on every use; keep the
+                    # new one when provided.
+                    "refresh_token": tokens.get("refresh_token") or refresh_token,
+                    "id_token": tokens.get("id_token") or payload.get("id_token", ""),
+                }
+            )
+            self.store.put(sid, payload)
+            return tokens["access_token"]
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("token refresh failed, session dropped: %s", exc)
+            self.store.delete(sid)
+            return None
+
+
+def _unverified_exp(token: str) -> float | None:
+    """Extract the exp claim without verifying the signature (portal-side
+    freshness check only; modules still fully validate the token)."""
+    if not token:
+        return None
+    try:
+        claims = jwt.decode(token, options={"verify_signature": False})
+        exp = claims.get("exp")
+        return float(exp) if exp is not None else None
+    except Exception:  # noqa: BLE001
+        return None
