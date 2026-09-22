@@ -30,7 +30,7 @@ settings = Settings()
 modules = {m.key: m for m in load_modules()}
 store = SessionStore(settings.redis_url, settings.session_ttl_seconds)
 auth = OIDCClient(settings, store)
-proxy = ModuleProxy()
+proxy = ModuleProxy(settings.public_base_url)
 probe_client = httpx.AsyncClient(timeout=httpx.Timeout(4.0, connect=2.0))
 
 app = FastAPI(title="Arca Suite Portal", version="0.1.0", docs_url=None, redoc_url=None)

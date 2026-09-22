@@ -29,9 +29,25 @@ _HOP_BY_HOP = {
 
 
 class ModuleProxy:
-    def __init__(self) -> None:
+    def __init__(self, public_base_url: str = "") -> None:
         # No http2: module backends are plain HTTP/1.1 uvicorns.
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=5.0))
+        self._public_base = public_base_url.rstrip("/")
+
+    def _rewrite_location(self, location: str, module: Module, base: str) -> str:
+        """Map upstream redirect targets back to the portal mount point.
+
+        Modules build absolute redirect URLs from the request Host (the
+        in-cluster service name), and relative ones stay inside their own
+        mount path; both must target /m/<key> on the portal origin.
+        """
+        if location.startswith(base):
+            if not self._public_base:
+                return location
+            return f"{self._public_base}/m/{module.key}{location[len(base):]}"
+        if location.startswith("/") and not location.startswith("//"):
+            return f"/m/{module.key}{location}"
+        return location
 
     async def forward(self, module: Module, rest: str, request: Request, token: str) -> Response:
         base = module.service.rstrip("/")
@@ -58,6 +74,9 @@ class ModuleProxy:
             for k, v in upstream.headers.items()
             if k.lower() not in _HOP_BY_HOP and k.lower() not in ("content-length", "content-encoding")
         }
+        location = upstream.headers.get("location")
+        if location:
+            resp_headers["location"] = self._rewrite_location(location, module, base)
         return StreamingResponse(
             upstream.aiter_raw(),
             status_code=upstream.status_code,
