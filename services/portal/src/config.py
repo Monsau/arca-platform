@@ -67,6 +67,7 @@ class Module:
     service: str  # in-cluster service host (e.g. http://trust.arcasuite.svc.cluster.local)
     ui_base: str  # module UI mount path, proxied under /m/<key>
     description: str = ""
+    health: str = "/healthz"  # module health endpoint, probed for the overview chips
 
 
 def load_modules() -> list[Module]:

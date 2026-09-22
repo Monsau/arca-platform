@@ -128,12 +128,12 @@ async def module_proxy(key: str, rest: str, request: Request) -> Response:
     module = modules.get(key)
     if not module:
         raise HTTPException(status_code=404, detail="unknown module")
-    # Strip the leading ui_base so the module receives its native paths,
-    # then re-inject it: modules expect to be served under their ui_base.
-    ui_base = module.ui_base.rstrip("/")
+    # Verbatim contract: /m/<key>/<path> is forwarded to the module service
+    # as /<path>, unchanged. Module UIs mounted under the portal must emit
+    # prefix-aware URLs: relative assets, and API calls against
+    # /m/<key>/api/... (see portal.md). Relative redirect Locations from the
+    # module are rewritten back under /m/<key> by the proxy.
     path = "/" + rest if rest else "/"
-    if not path.startswith(ui_base + "/") and path != ui_base and ui_base:
-        path = ui_base + (path if path.startswith("/") else "/" + path)
     return await proxy.forward(module, path, request)
 
 
@@ -141,8 +141,8 @@ async def _probe_modules() -> dict[str, dict]:
     """Live health of every module — real probes, honest failures."""
     statuses: dict[str, dict] = {}
 
-    async def probe(key: str, service: str) -> None:
-        url = f"{service.rstrip('/')}/healthz"
+    async def probe(key: str, service: str, health: str) -> None:
+        url = f"{service.rstrip('/')}{health}"
         try:
             resp = await probe_client.get(url)
             statuses[key] = {"ok": resp.status_code < 500, "status": resp.status_code}
@@ -151,7 +151,7 @@ async def _probe_modules() -> dict[str, dict]:
 
     import asyncio
 
-    await asyncio.gather(*(probe(m.key, m.service) for m in modules.values()))
+    await asyncio.gather(*(probe(m.key, m.service, m.health) for m in modules.values()))
     return statuses
 
 
