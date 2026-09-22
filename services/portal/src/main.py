@@ -22,7 +22,7 @@ from .auth import AuthError, OIDCClient, SessionStore
 from .config import Settings, load_ecosystem, load_modules
 from .proxy import ModuleProxy
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -126,8 +126,10 @@ def _require_admin(request: Request) -> dict:
 
 
 # Access governance (OpenMetadata-style): roles, group hierarchy, user
-# grants and policies, backed by the Keycloak service-account client.
+# grants, policies and ReBAC tuples, backed by the Keycloak service-account
+# client and the shared OpenFGA instance (ecosystem reuse).
 kc_admin = None
+fga_client = None
 if settings.kc_admin_base and settings.kc_admin_client_id and settings.kc_admin_client_secret:
     _realm = settings.oidc_issuer.rstrip("/").rsplit("/realms/", 1)[-1]
     from .access import KCAdmin, build_router
@@ -138,8 +140,21 @@ if settings.kc_admin_base and settings.kc_admin_client_id and settings.kc_admin_
         client_id=settings.kc_admin_client_id,
         client_secret=settings.kc_admin_client_secret,
     )
+    if settings.openfga_url:
+        from .openfga import FGAClient
+
+        # Bootstrap is best-effort at startup: if OpenFGA is briefly
+        # unreachable the app still boots and the routes answer 503 until
+        # PORTAL_OPENFGA_URL is reachable and the store is ensured.
+        try:
+            fga_client = FGAClient(settings.openfga_url)
+            fga_client.ensure_store()
+            logger.info("openfga store ready: %s", fga_client.store_id)
+        except Exception as exc:  # noqa: BLE001 — boot must not fail on authz
+            logger.error("openfga bootstrap failed, authz routes disabled: %s", exc)
+            fga_client = None
     app.include_router(
-        build_router(kc_admin), dependencies=[Depends(_require_admin)])
+        build_router(kc_admin, fga_client), dependencies=[Depends(_require_admin)])
 
 
 @app.get("/api/me")

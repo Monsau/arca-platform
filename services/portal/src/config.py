@@ -37,6 +37,8 @@ class Settings:
     kc_admin_client_id: str = field(default_factory=lambda: _env("PORTAL_KC_ADMIN_CLIENT_ID"))
     kc_admin_client_secret: str = field(default_factory=lambda: _env("PORTAL_KC_ADMIN_CLIENT_SECRET"))
     policy_db_dsn: str = field(default_factory=lambda: _env("PORTAL_POLICY_DB_DSN"))
+    # ReBAC: shared OpenFGA instance URL (ecosystem reuse — arcaq-authorization).
+    openfga_url: str = field(default_factory=lambda: _env("PORTAL_OPENFGA_URL"))
 
     @property
     def issuer(self) -> str:

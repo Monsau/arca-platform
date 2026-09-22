@@ -1,8 +1,10 @@
-"""Access governance — roles / groups (hierarchy) / memberships / policies.
+"""Access governance — roles / groups (hierarchy) / memberships / policies / ReBAC.
 
 OpenMetadata-style administration surface, backed by Keycloak Admin REST
-(roles, groups, group-role mappings, memberships) and by the platform policy
-store (role -> module/action grants) in Postgres.
+(roles, groups, group-role mappings, memberships), the platform policy store
+(role -> module/action grants) in Postgres, and the shared OpenFGA instance
+(arcaq-authorization) for relation-based access control: direct grants,
+group-membership grants and parent-inheritance between assets and modules.
 
 The portal talks to Keycloak with a dedicated service-account client
 (PORTAL_KC_ADMIN_CLIENT_ID / _SECRET) holding manage-realm + manage-users.
@@ -215,7 +217,9 @@ async def delete_policy(name: str) -> None:
 # ---------------------------------------------------------------------------
 # Router — wired in main.py behind the admin gate
 # ---------------------------------------------------------------------------
-def build_router(kc: KCAdmin) -> APIRouter:
+def build_router(kc: KCAdmin, fga=None) -> APIRouter:
+    """Governance routes. `fga` is an FGAClient; ReBAC routes answer 503 when
+    PORTAL_OPENFGA_URL is not configured, so governance degrades gracefully."""
     router = APIRouter(prefix="/admin/access")
 
     @router.get("/roles")
@@ -296,5 +300,59 @@ def build_router(kc: KCAdmin) -> APIRouter:
         if not POLICY_DSN:
             raise HTTPException(status_code=503, detail="policy store not configured")
         await delete_policy(name)
+
+    # -- ReBAC (OpenFGA): fine-grained relation tuples on modules and assets --
+    def _require_fga():
+        if fga is None:
+            raise HTTPException(status_code=503, detail="openfga not configured")
+        return fga
+
+    @router.get("/authz/model")
+    def authz_model():
+        client = _require_fga()
+        return {"store": client.store_name, "store_id": client.store_id,
+                "model_id": client.model_id, "schema": "1.1"}
+
+    @router.get("/authz/tuples")
+    def authz_tuples(object: str = "", user: str = ""):
+        client = _require_fga()
+        tuples = client.list_tuples(obj=object or None, user=user or None)
+        return {"tuples": [
+            {"user": t["key"]["user"], "relation": t["key"]["relation"],
+             "object": t["key"]["object"]} for t in tuples]}
+
+    @router.post("/authz/tuples", status_code=201)
+    def authz_grant(body: dict):
+        client = _require_fga()
+        user = (body or {}).get("user", "").strip()
+        relation = (body or {}).get("relation", "").strip()
+        obj = (body or {}).get("object", "").strip()
+        if not user or not relation or not obj:
+            raise HTTPException(
+                status_code=422, detail="user, relation and object are required")
+        client.write_tuple(user, relation, obj)
+        return {"user": user, "relation": relation, "object": obj}
+
+    @router.delete("/authz/tuples", status_code=204)
+    def authz_revoke(body: dict):
+        client = _require_fga()
+        user = (body or {}).get("user", "").strip()
+        relation = (body or {}).get("relation", "").strip()
+        obj = (body or {}).get("object", "").strip()
+        if not user or not relation or not obj:
+            raise HTTPException(
+                status_code=422, detail="user, relation and object are required")
+        client.delete_tuple(user, relation, obj)
+
+    @router.post("/authz/check")
+    def authz_check(body: dict):
+        client = _require_fga()
+        user = (body or {}).get("user", "").strip()
+        relation = (body or {}).get("relation", "").strip()
+        obj = (body or {}).get("object", "").strip()
+        if not user or not relation or not obj:
+            raise HTTPException(
+                status_code=422, detail="user, relation and object are required")
+        return {"allowed": client.check(user, relation, obj)}
 
     return router
