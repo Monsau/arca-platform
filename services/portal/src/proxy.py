@@ -62,9 +62,10 @@ class ModuleProxy:
         headers["x-arca-portal"] = "1"
         body = await request.body()
         try:
-            upstream = await self._client.request(
+            upstream_req = self._client.build_request(
                 request.method, url, params=request.query_params, headers=headers, content=body
             )
+            upstream = await self._client.send(upstream_req, stream=True)
         except httpx.TransportError as exc:
             logger.warning("proxy to %s failed: %s", module.key, exc)
             return _module_error(module, "unreachable", exc)
