@@ -22,7 +22,7 @@ from .auth import AuthError, OIDCClient, SessionStore
 from .config import Settings, load_ecosystem, load_modules
 from .proxy import ModuleProxy
 
-APP_VERSION = "0.3.1"
+APP_VERSION = "0.3.2"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

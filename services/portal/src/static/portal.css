@@ -372,6 +372,12 @@ a { color: inherit; text-decoration: none; }
     padding-top: 12vh;
 }
 
+/* The class display above outranks the UA [hidden] rule: without this the
+   overlay stays visible even after closePalette() sets hidden=true. */
+.palette-overlay[hidden] {
+    display: none;
+}
+
 .palette {
     width: min(520px, 92vw);
     background: var(--bg-card);
@@ -501,6 +507,12 @@ a { color: inherit; text-decoration: none; }
     background: var(--bg-primary);
     color: var(--text-secondary);
     font-size: 13px;
+}
+
+/* Same hidden-attribute guard as .palette-overlay[hidden]. */
+.module-loading[hidden],
+.module-error[hidden] {
+    display: none;
 }
 
 .spinner {
