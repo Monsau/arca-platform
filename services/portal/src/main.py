@@ -19,10 +19,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .auth import AuthError, OIDCClient, SessionStore
-from .config import Settings, load_modules
+from .config import Settings, load_ecosystem, load_modules
 from .proxy import ModuleProxy
 
-APP_VERSION = "0.1.9"
+APP_VERSION = "0.1.10"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -45,11 +45,9 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 _pending_states: set[str] = set()
 
 # Sister products of the suite: same realm, same users, full-page navigation
-# (they own their UI and auth session; the portal only links out).
-ECOSYSTEM = [
-    {"name": "ArcaQ", "url": "https://arcaq.local", "icon": "account_tree"},
-    {"name": "ArcaX", "url": "https://arcax.local", "icon": "hub"},
-]
+# (they own their UI and auth session; the portal only links out). Wiring is
+# config-driven via PORTAL_ECOSYSTEM — see config.load_ecosystem.
+ECOSYSTEM = [link.__dict__ for link in load_ecosystem()]
 
 
 def _session(request: Request) -> dict | None:
@@ -209,6 +207,12 @@ async def module_proxy(key: str, rest: str, request: Request) -> Response:
     session = _session(request)
     if not session:
         return _auth_expired(request)
+    # Squad gate, same rule as pages and /api/statuses: the platform and all
+    # its modules are reserved to squad members and suite admins. Without
+    # this, any authenticated realm account could reach module APIs directly
+    # even though the portal UI refuses them.
+    if not _is_platform_member(session):
+        return _forbidden(request, session)
     # Security by design: always forward the session's SSO access token
     # (refreshed when close to expiry). No token, no call — modules reject
     # anonymous requests, and so does the portal.

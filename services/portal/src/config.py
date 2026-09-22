@@ -70,6 +70,15 @@ class Module:
     health: str = "/healthz"  # module health endpoint, probed for the overview chips
 
 
+@dataclass(frozen=True)
+class EcosystemLink:
+    """One external product linked from the portal navigation (ecosystem)."""
+
+    name: str
+    url: str
+    icon: str = "open_in_new"
+
+
 def load_modules() -> list[Module]:
     """Load the module registry from PORTAL_MODULES (JSON) or defaults.
 
@@ -90,4 +99,20 @@ def load_modules() -> list[Module]:
         Module("decision-room", "Decision Room", "gavel", f"http://arca-decision-room.{ns}", "/ui/", "Collaborative decision workspace"),
         Module("flow", "Flow", "account_tree", f"http://arca-flow.{ns}", "/ui/", "Workflow runtime and state"),
         Module("packs", "Packs", "inventory_2", f"http://arca-packs-api.{ns}", "/ui/", "Certified capability packs"),
+    ]
+
+
+def load_ecosystem() -> list[EcosystemLink]:
+    """Load the external ecosystem links from PORTAL_ECOSYSTEM (JSON) or defaults.
+
+    Same contract as load_modules: wiring lives in deployment configuration
+    (values / manifests set the env), never hardcoded per environment.
+    """
+    raw = _env("PORTAL_ECOSYSTEM")
+    if raw:
+        data = json.loads(raw)
+        return [EcosystemLink(**m) for m in data]
+    return [
+        EcosystemLink("ArcaQ", "https://arcaq.local", "account_tree"),
+        EcosystemLink("ArcaX", "https://arcax.local", "hub"),
     ]
