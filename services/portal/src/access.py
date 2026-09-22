@@ -93,30 +93,23 @@ class KCAdmin:
 
     # -- groups ---------------------------------------------------------------
     def list_groups(self) -> list[dict]:
-        """Full group list with parent links.
-
-        Keycloak's GET /groups returns top-level groups WITHOUT subGroups
-        populated in this version; searching by the exact top-level name
-        returns that group's subtree. We therefore expand every root via
-        search (small realm, admin-only surface — N+1 is acceptable).
-        """
+        """Full group list with parent links, via the dedicated children
+        endpoint (this Keycloak returns subGroupCount but an empty subGroups
+        list on both /groups and /groups/{id} representations)."""
         _, tree = self.call("GET", "/groups?max=1000")
-        flat = []
-        for g in tree:
-            _, found = self.call(
-                "GET", f"/groups?search={urllib.parse.quote(g['name'], safe='')}")
-            node = next((n for n in found if n["name"] == g["name"]), None) or g
-            flat.append({"name": node["name"], "parent": None,
-                         "id": node.get("id")})
-            self._walk_subgroups(node, flat)
-        return flat
+        flat: list[dict] = []
 
-    @staticmethod
-    def _walk_subgroups(node, flat) -> None:
-        for sub in node.get("subGroups") or []:
-            flat.append({"name": sub["name"], "parent": node["name"],
-                         "id": sub.get("id")})
-            KCAdmin._walk_subgroups(sub, flat)
+        def walk(node, parent):
+            flat.append({"name": node["name"], "parent": parent,
+                         "id": node.get("id")})
+            _, children = self.call(
+                "GET", f"/groups/{node['id']}/children?max=1000")
+            for sub in children:
+                walk(sub, node["name"])
+
+        for g in tree:
+            walk(g, None)
+        return flat
 
     def _group_id(self, name: str) -> str:
         """Resolve a group id by exact name, walking search-result subtrees
