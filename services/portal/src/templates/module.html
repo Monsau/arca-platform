@@ -2,10 +2,56 @@
 {% block title %}{{ module.name }} — Arca Suite{% endblock %}
 {% block heading %}{{ module.name }}{% endblock %}
 {% block subheading %}{{ module.description }}{% endblock %}
+{% block topbar_actions %}
+<button class="icon-btn" onclick="reloadModule()" title="Reload module" aria-label="Reload module">
+  <span class="material-icons" aria-hidden="true">refresh</span>
+</button>
+{% endblock %}
 {% block content %}
   {# The module serves its own UI through the authenticated proxy; the
      frame keeps the portal chrome (navigation, identity) around it and
      the address bar stays on the portal — no /ui/ URLs leak to users. #}
-  <iframe class="module-frame" src="/m/{{ module.key }}/{{ module.ui_base.lstrip('/') }}"
-          title="{{ module.name }}"></iframe>
+  <div class="module-host" id="module-host">
+    <div class="module-loading" id="module-loading" role="status">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="module-loading-text">Loading {{ module.name }}…</div>
+    </div>
+    <div class="module-error" id="module-error" role="alert" hidden>
+      <span class="material-icons" aria-hidden="true">error_outline</span>
+      <div class="module-error-text">{{ module.name }} did not respond in time.</div>
+      <button class="btn" onclick="reloadModule()">Retry</button>
+    </div>
+    <iframe class="module-frame" id="module-frame"
+            src="/m/{{ module.key }}/{{ module.ui_base.lstrip('/') }}"
+            title="{{ module.name }}"
+            onload="onModuleLoaded()"></iframe>
+  </div>
+  <script>
+    // Loading experience: skeleton stays until the frame signals it rendered;
+    // a hang surfaces an honest error with a retry instead of a blank area.
+    var LOAD_TIMEOUT_MS = 20000;
+    var loadTimer = null;
+
+    function onModuleLoaded() {
+      clearTimeout(loadTimer);
+      document.getElementById('module-loading').hidden = true;
+      document.getElementById('module-error').hidden = true;
+      var frame = document.getElementById('module-frame');
+      frame.classList.add('ready');
+    }
+    function reloadModule() {
+      var frame = document.getElementById('module-frame');
+      document.getElementById('module-error').hidden = true;
+      document.getElementById('module-loading').hidden = false;
+      frame.classList.remove('ready');
+      clearTimeout(loadTimer);
+      loadTimer = setTimeout(onModuleTimeout, LOAD_TIMEOUT_MS);
+      frame.src = frame.src;
+    }
+    function onModuleTimeout() {
+      document.getElementById('module-loading').hidden = true;
+      document.getElementById('module-error').hidden = false;
+    }
+    loadTimer = setTimeout(onModuleTimeout, LOAD_TIMEOUT_MS);
+  </script>
 {% endblock %}

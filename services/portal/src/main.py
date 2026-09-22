@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import secrets
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -20,6 +21,8 @@ from fastapi.templating import Jinja2Templates
 from .auth import AuthError, OIDCClient, SessionStore
 from .config import Settings, load_modules
 from .proxy import ModuleProxy
+
+APP_VERSION = "0.1.8"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,7 +36,7 @@ auth = OIDCClient(settings, store)
 proxy = ModuleProxy(settings.public_base_url)
 probe_client = httpx.AsyncClient(timeout=httpx.Timeout(4.0, connect=2.0))
 
-app = FastAPI(title="Arca Suite Portal", version="0.1.0", docs_url=None, redoc_url=None)
+app = FastAPI(title="Arca Suite Portal", version=APP_VERSION, docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
@@ -142,6 +145,18 @@ async def overview(request: Request) -> Response:
             "statuses": statuses,
         },
     )
+
+
+@app.get("/api/statuses")
+async def module_statuses(request: Request) -> dict:
+    """Fresh module health as JSON — powers the overview auto-refresh
+    without a full page reload. Session required, same rule as pages."""
+    _require_session(request)
+    statuses = await _probe_modules()
+    return {
+        "statuses": statuses,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @app.api_route("/m/{key}/{rest:path}",

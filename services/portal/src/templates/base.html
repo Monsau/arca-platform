@@ -22,22 +22,29 @@
   </script>
 </head>
 <body>
-<div class="shell">
-  <aside class="sidebar">
+<a class="skip-link" href="#content">Skip to content</a>
+<div class="shell" id="shell">
+  <aside class="sidebar" id="sidebar">
     <div class="brand">
       <img class="brand-logo" src="/static/arcasuite-logo.svg" alt="Arca Suite logo" width="40" height="40">
-      <div>
+      <div class="brand-text">
         <div class="brand-name">Arca<em>Suite</em></div>
         <div class="brand-tag">Your data. Your rules. Your AI.</div>
       </div>
+      <button class="icon-btn sidebar-toggle" id="sidebar-toggle"
+              onclick="toggleSidebar()" title="Collapse sidebar" aria-label="Collapse sidebar"
+              aria-expanded="true" aria-controls="sidebar">
+        <span class="material-icons">chevron_left</span>
+      </button>
     </div>
 
     <div class="nav-section-title"><span>Modules</span></div>
-    <nav>
+    <nav aria-label="Suite modules">
       {% for m in modules %}
       <a class="nav-item {{ 'active' if active == m.key }}"
-         href="/module/{{ m.key }}">
-        <span class="material-icons">{{ m.icon }}</span>
+         href="/module/{{ m.key }}"
+         {% if active == m.key %}aria-current="page"{% endif %}>
+        <span class="material-icons" aria-hidden="true">{{ m.icon }}</span>
         <span class="nav-item-label">{{ m.name }}</span>
         {% if statuses and statuses.get(m.key) %}
           {% if statuses[m.key].ok %}<span class="status-chip ok">up</span>
@@ -49,17 +56,17 @@
 
     <div class="sidebar-footer">
       <div class="user-chip">
-        <div class="user-avatar">{{ (user.name or user.preferred_username or 'U')[:1].upper() }}</div>
+        <div class="user-avatar" aria-hidden="true">{{ (user.name or user.preferred_username or 'U')[:1].upper() }}</div>
         <div class="user-meta">
           <div class="user-name">{{ user.name or user.preferred_username or user.sub }}</div>
           <div class="user-sub">{{ user.email or '' }}</div>
         </div>
       </div>
-      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">
-        <span class="material-icons">contrast</span>
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+        <span class="material-icons" aria-hidden="true">contrast</span>
       </button>
-      <a class="icon-btn" href="/auth/logout" title="Sign out">
-        <span class="material-icons">logout</span>
+      <a class="icon-btn" href="/auth/logout" title="Sign out" aria-label="Sign out">
+        <span class="material-icons" aria-hidden="true">logout</span>
       </a>
     </div>
   </aside>
@@ -70,11 +77,151 @@
         <div class="topbar-title">{% block heading %}Overview{% endblock %}</div>
         <div class="topbar-sub">{% block subheading %}Arca Suite modules{% endblock %}</div>
       </div>
+      <div class="topbar-actions">
+        {% block topbar_actions %}{% endblock %}
+        <button class="palette-hint" id="palette-hint" onclick="openPalette()" title="Quick open (Ctrl+K)">
+          <span class="material-icons" aria-hidden="true">search</span>
+          <span>Quick open</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+      </div>
     </div>
-    <div class="content">
+    <div class="content" id="content" tabindex="-1">
       {% block content %}{% endblock %}
     </div>
   </div>
 </div>
+
+{# Command palette: one flat, keyboard-first switcher over the whole suite. #}
+<div class="palette-overlay" id="palette-overlay" hidden>
+  <div class="palette" role="dialog" aria-modal="true" aria-label="Quick open">
+    <div class="palette-input-row">
+      <span class="material-icons" aria-hidden="true">search</span>
+      <input id="palette-input" type="text" autocomplete="off" spellcheck="false"
+             placeholder="Jump to a module…" aria-label="Jump to a module">
+    </div>
+    <ul class="palette-list" id="palette-list" role="listbox" aria-label="Modules"></ul>
+    <div class="palette-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> open</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Sidebar collapse, persisted across sessions.
+  (function () {
+    if (localStorage.getItem('arca_sidebar') === 'collapsed') {
+      document.getElementById('shell').classList.add('sidebar-collapsed');
+      var btn = document.getElementById('sidebar-toggle');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-label', 'Expand sidebar');
+      btn.setAttribute('title', 'Expand sidebar');
+      btn.querySelector('.material-icons').textContent = 'chevron_right';
+    }
+  })();
+  function toggleSidebar() {
+    var shell = document.getElementById('shell');
+    var btn = document.getElementById('sidebar-toggle');
+    var collapsed = shell.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('arca_sidebar', collapsed ? 'collapsed' : 'expanded');
+    btn.setAttribute('aria-expanded', String(!collapsed));
+    btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    btn.setAttribute('title', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    btn.querySelector('.material-icons').textContent = collapsed ? 'chevron_right' : 'chevron_left';
+  }
+
+  // Command palette: Ctrl/Cmd+K opens, type to filter, Enter to jump.
+  var PALETTE_TARGETS = [
+    { key: '', name: 'Suite Overview', icon: 'dashboard', url: '/' }
+  ].concat({{ modules | tojson }}.map(function (m) {
+    return { key: m.key, name: m.name, icon: m.icon, url: '/module/' + m.key };
+  }));
+  var paletteOverlay = document.getElementById('palette-overlay');
+  var paletteInput = document.getElementById('palette-input');
+  var paletteList = document.getElementById('palette-list');
+  var paletteIndex = 0;
+  var paletteMatches = PALETTE_TARGETS;
+
+  function paletteFilter(query) {
+    var q = query.trim().toLowerCase();
+    if (!q) return PALETTE_TARGETS;
+    return PALETTE_TARGETS.filter(function (t) {
+      return t.name.toLowerCase().indexOf(q) !== -1 || t.key.indexOf(q) !== -1;
+    });
+  }
+  function paletteRender() {
+    paletteList.innerHTML = '';
+    paletteMatches.forEach(function (t, i) {
+      var li = document.createElement('li');
+      li.className = 'palette-item' + (i === paletteIndex ? ' active' : '');
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', String(i === paletteIndex));
+      li.innerHTML = '<span class="material-icons" aria-hidden="true">' + t.icon + '</span>' +
+                     '<span class="palette-item-name">' + t.name + '</span>' +
+                     (t.key ? '<span class="palette-item-key">' + t.key + '</span>' : '');
+      li.addEventListener('click', function () { paletteGo(i); });
+      li.addEventListener('mousemove', function () {
+        if (paletteIndex !== i) { paletteIndex = i; paletteRender(); }
+      });
+      paletteList.appendChild(li);
+    });
+    if (!paletteMatches.length) {
+      var empty = document.createElement('li');
+      empty.className = 'palette-empty';
+      empty.textContent = 'No module matches';
+      paletteList.appendChild(empty);
+    }
+  }
+  function paletteGo(i) {
+    var t = paletteMatches[i];
+    if (!t) return;
+    window.location.href = t.url;
+  }
+  function openPalette() {
+    paletteOverlay.hidden = false;
+    paletteInput.value = '';
+    paletteMatches = PALETTE_TARGETS;
+    paletteIndex = 0;
+    paletteRender();
+    paletteInput.focus();
+  }
+  function closePalette() {
+    paletteOverlay.hidden = true;
+    var hint = document.getElementById('palette-hint');
+    if (hint) hint.focus();
+  }
+  paletteInput.addEventListener('input', function () {
+    paletteMatches = paletteFilter(paletteInput.value);
+    paletteIndex = 0;
+    paletteRender();
+  });
+  paletteInput.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      paletteIndex = Math.min(paletteIndex + 1, paletteMatches.length - 1);
+      paletteRender();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      paletteIndex = Math.max(paletteIndex - 1, 0);
+      paletteRender();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      paletteGo(paletteIndex);
+    } else if (e.key === 'Escape') {
+      closePalette();
+    }
+  });
+  paletteOverlay.addEventListener('mousedown', function (e) {
+    if (e.target === paletteOverlay) closePalette();
+  });
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (paletteOverlay.hidden) openPalette(); else closePalette();
+    }
+  });
+</script>
 </body>
 </html>
