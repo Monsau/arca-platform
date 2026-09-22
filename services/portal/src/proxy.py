@@ -52,7 +52,7 @@ class ModuleProxy:
         return location
 
     async def forward(self, module: Module, rest: str, request: Request,
-                      token: str = "") -> Response:
+                      token: str = "", navigation: bool = False) -> Response:
         base = module.service.rstrip("/")
         # rest already includes the ui_base prefix stripped by the caller.
         url = f"{base}{rest}"
@@ -82,6 +82,14 @@ class ModuleProxy:
             for k, v in upstream.headers.items()
             if k.lower() not in _HOP_BY_HOP and k.lower() not in ("content-length", "content-encoding")
         }
+        # Platform-owned auth: when the module rejects the credential, page
+        # navigations bounce back to the centralized login instead of
+        # rendering the module's raw 401 inside the shell.
+        if upstream.status_code == 401 and navigation:
+            await upstream.aclose()
+            from fastapi.responses import RedirectResponse
+
+            return RedirectResponse("/auth/login", status_code=303)
         location = upstream.headers.get("location")
         if location:
             resp_headers["location"] = self._rewrite_location(location, module, base)

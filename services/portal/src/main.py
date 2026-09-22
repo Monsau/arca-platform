@@ -53,6 +53,28 @@ def _require_session(request: Request) -> dict:
     return session
 
 
+def _is_navigation(request: Request) -> bool:
+    """True when the request is a page navigation (top level or iframe).
+
+    Fetch/XHR API calls from module UIs are left as 401 JSON so the portal
+    owns the auth experience; only document navigations are bounced to the
+    centralized Keycloak login.
+    """
+    dest = request.headers.get("sec-fetch-dest", "")
+    if dest in ("document", "iframe"):
+        return True
+    accept = request.headers.get("accept", "")
+    return request.method == "GET" and "text/html" in accept
+
+
+def _auth_expired(request: Request) -> Response:
+    """Centralized auth handling (platform-owned): navigations bounce to the
+    Keycloak login flow; API calls receive an honest 401."""
+    if _is_navigation(request):
+        return RedirectResponse("/auth/login", status_code=303)
+    raise HTTPException(status_code=401, detail="authentication required")
+
+
 @app.get("/healthz")
 async def healthz() -> dict:
     return {"status": "healthy", "oidc_configured": settings.configured}
@@ -127,13 +149,13 @@ async def overview(request: Request) -> Response:
 async def module_proxy(key: str, rest: str, request: Request) -> Response:
     session = _session(request)
     if not session:
-        raise HTTPException(status_code=401, detail="authentication required")
+        return _auth_expired(request)
     # Security by design: always forward the session's SSO access token
     # (refreshed when close to expiry). No token, no call — modules reject
     # anonymous requests, and so does the portal.
     token = await auth.ensure_fresh_token(request.cookies.get(settings.session_cookie))
     if not token:
-        raise HTTPException(status_code=401, detail="session expired — please sign in again")
+        return _auth_expired(request)
     module = modules.get(key)
     if not module:
         raise HTTPException(status_code=404, detail="unknown module")
@@ -143,7 +165,8 @@ async def module_proxy(key: str, rest: str, request: Request) -> Response:
     # /m/<key>/api/... (see portal.md). Relative redirect Locations from the
     # module are rewritten back under /m/<key> by the proxy.
     path = "/" + rest if rest else "/"
-    return await proxy.forward(module, path, request, token=token)
+    return await proxy.forward(module, path, request, token=token,
+                               navigation=_is_navigation(request))
 
 
 async def _probe_modules() -> dict[str, dict]:
