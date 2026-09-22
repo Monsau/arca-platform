@@ -134,7 +134,7 @@ async def module_proxy(key: str, rest: str, request: Request) -> Response:
     path = "/" + rest if rest else "/"
     if not path.startswith(ui_base + "/") and path != ui_base and ui_base:
         path = ui_base + (path if path.startswith("/") else "/" + path)
-    return await proxy.forward(module, path, request, session["access_token"])
+    return await proxy.forward(module, path, request)
 
 
 async def _probe_modules() -> dict[str, dict]:

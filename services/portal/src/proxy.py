@@ -1,8 +1,10 @@
 """Reverse proxy from the portal shell to suite module services.
 
 Every request under /m/<module>/... is forwarded to the module's in-cluster
-service with the caller's Keycloak access token attached as a Bearer token,
-so modules observe one consistent identity regardless of entry point.
+service. Phase 1 note: the caller's Keycloak access token is intentionally
+NOT attached yet — modules run with their dev auth bypass and would reject a
+foreign Bearer token. Phase 2 restores Bearer propagation once modules trust
+the shared Keycloak issuer.
 """
 from __future__ import annotations
 
@@ -49,16 +51,19 @@ class ModuleProxy:
             return f"/m/{module.key}{location}"
         return location
 
-    async def forward(self, module: Module, rest: str, request: Request, token: str) -> Response:
+    async def forward(self, module: Module, rest: str, request: Request) -> Response:
         base = module.service.rstrip("/")
         # rest already includes the ui_base prefix stripped by the caller.
         url = f"{base}{rest}"
+        # Phase 1: modules run with their dev auth bypass (AUTH_DISABLED=1)
+        # and reject a foreign Bearer token, so the caller's Keycloak token
+        # is NOT forwarded yet. Phase 2 (module Keycloak trust) will restore
+        # identity propagation end to end.
         headers = {
             k.lower(): v
             for k, v in request.headers.items()
-            if k.lower() not in _HOP_BY_HOP and k.lower() not in ("host", "cookie")
+            if k.lower() not in _HOP_BY_HOP and k.lower() not in ("host", "cookie", "authorization")
         }
-        headers["authorization"] = f"Bearer {token}"
         headers["x-arca-portal"] = "1"
         body = await request.body()
         try:
