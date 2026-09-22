@@ -38,6 +38,7 @@
       </button>
     </div>
 
+    {% if not hide_nav %}
     <div class="nav-section-title"><span>Modules</span></div>
     <nav aria-label="Suite modules">
       {% for m in modules %}
@@ -53,6 +54,18 @@
       </a>
       {% endfor %}
     </nav>
+
+    <div class="nav-section-title"><span>Ecosystem</span></div>
+    <nav aria-label="Ecosystem products">
+      {% for e in ecosystem %}
+      <a class="nav-item nav-external" href="{{ e.url }}" target="_blank" rel="noopener">
+        <span class="material-icons" aria-hidden="true">{{ e.icon }}</span>
+        <span class="nav-item-label">{{ e.name }}</span>
+        <span class="material-icons external-hint" aria-hidden="true">open_in_new</span>
+      </a>
+      {% endfor %}
+    </nav>
+    {% endif %}
 
     <div class="sidebar-footer">
       <div class="user-chip">

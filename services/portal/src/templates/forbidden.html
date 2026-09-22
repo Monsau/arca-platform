@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Access restricted — Arca Suite{% endblock %}
+{% block heading %}Access restricted{% endblock %}
+{% block subheading %}Arca Suite is reserved for squad members{% endblock %}
+{% block content %}
+<div class="forbidden">
+  <span class="material-icons" aria-hidden="true">lock</span>
+  <div class="forbidden-title">This platform is not open to all</div>
+  <div class="forbidden-text">
+    Access to the Arca Suite is granted per squad — for example
+    <code>squad-data-gouv</code>, <code>squad-ontologies-gouv</code> or
+    <code>squad-cognitive</code>. Your account is authenticated but belongs to
+    no squad. Contact the platform owner to be assigned.
+  </div>
+  <div class="forbidden-identity">
+    Signed in as {{ user.name or user.preferred_username or user.sub }}
+    ({{ user.email or 'no email' }})
+  </div>
+</div>
+{% endblock %}

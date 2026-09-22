@@ -587,3 +587,40 @@ a { color: inherit; text-decoration: none; }
     color: var(--text-tertiary);
     font-size: 13px;
 }
+
+/* ---- Ecosystem links ------------------------------------------------------- */
+
+.nav-external .external-hint {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin-left: auto;
+}
+.shell.sidebar-collapsed .nav-external .external-hint { display: none; }
+
+/* ---- Forbidden (squad gate) ------------------------------------------------- */
+
+.forbidden {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+.forbidden .material-icons { font-size: 40px; color: var(--warning); }
+.forbidden-title { font-size: 18px; font-weight: 700; }
+.forbidden-text {
+    max-width: 520px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+.forbidden-text code {
+    background: var(--bg-hover);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.forbidden-identity { color: var(--text-tertiary); font-size: 12px; }

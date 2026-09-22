@@ -22,7 +22,7 @@ from .auth import AuthError, OIDCClient, SessionStore
 from .config import Settings, load_modules
 from .proxy import ModuleProxy
 
-APP_VERSION = "0.1.8"
+APP_VERSION = "0.1.9"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,9 +44,48 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 # the shell's single-replica deployment — see portal.md operations note).
 _pending_states: set[str] = set()
 
+# Sister products of the suite: same realm, same users, full-page navigation
+# (they own their UI and auth session; the portal only links out).
+ECOSYSTEM = [
+    {"name": "ArcaQ", "url": "https://arcaq.local", "icon": "account_tree"},
+    {"name": "ArcaX", "url": "https://arcax.local", "icon": "hub"},
+]
+
 
 def _session(request: Request) -> dict | None:
     return auth.load_session(request.cookies.get(settings.session_cookie))
+
+
+def _session_roles(session: dict) -> set[str]:
+    """Roles carried by the session, from the ID-token `roles` claim (realm
+    roles mapper) plus the standard realm_access block."""
+    claims = session.get("claims", {}) or {}
+    raw = claims.get("roles") or []
+    if isinstance(raw, str):
+        raw = [r.strip() for r in raw.split(",") if r.strip()]
+    realm = (claims.get("realm_access") or {}).get("roles", []) or []
+    return set(raw) | set(realm)
+
+
+def _is_platform_member(session: dict) -> bool:
+    """The platform is squad-gated: members of any squad (marker role) and
+    the suite-wide admin pass; every other authenticated account is refused."""
+    roles = _session_roles(session)
+    return "admin" in roles or "squad-member" in roles
+
+
+def _forbidden(request: Request, session: dict) -> Response:
+    return templates.TemplateResponse(
+        request,
+        "forbidden.html",
+        {
+            "user": session.get("claims", {}),
+            "modules": [dict(key=m.key, name=m.name, icon=m.icon, description=m.description) for m in modules.values()],
+            "ecosystem": ECOSYSTEM,
+            "hide_nav": True,
+        },
+        status_code=403,
+    )
 
 
 def _require_session(request: Request) -> dict:
@@ -134,6 +173,8 @@ async def overview(request: Request) -> Response:
     session = _session(request)
     if not session:
         return RedirectResponse("/auth/login")
+    if not _is_platform_member(session):
+        return _forbidden(request, session)
     claims = session.get("claims", {})
     statuses = await _probe_modules()
     return templates.TemplateResponse(
@@ -143,6 +184,7 @@ async def overview(request: Request) -> Response:
             "user": claims,
             "modules": [dict(key=m.key, name=m.name, icon=m.icon, description=m.description) for m in modules.values()],
             "statuses": statuses,
+            "ecosystem": ECOSYSTEM,
         },
     )
 
@@ -151,7 +193,9 @@ async def overview(request: Request) -> Response:
 async def module_statuses(request: Request) -> dict:
     """Fresh module health as JSON — powers the overview auto-refresh
     without a full page reload. Session required, same rule as pages."""
-    _require_session(request)
+    session = _require_session(request)
+    if not _is_platform_member(session):
+        raise HTTPException(status_code=403, detail="squad membership required")
     statuses = await _probe_modules()
     return {
         "statuses": statuses,
@@ -216,6 +260,8 @@ async def module_frame(key: str, request: Request) -> Response:
     session = _session(request)
     if not session:
         return RedirectResponse("/auth/login")
+    if not _is_platform_member(session):
+        return _forbidden(request, session)
     module = modules.get(key)
     if not module:
         raise HTTPException(status_code=404, detail="unknown module")
@@ -227,6 +273,7 @@ async def module_frame(key: str, request: Request) -> Response:
             "user": claims,
             "active": key,
             "module": module,
+            "ecosystem": ECOSYSTEM,
             "modules": [dict(key=m.key, name=m.name, icon=m.icon, description=m.description) for m in modules.values()],
         },
     )
