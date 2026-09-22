@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -22,7 +22,7 @@ from .auth import AuthError, OIDCClient, SessionStore
 from .config import Settings, load_ecosystem, load_modules
 from .proxy import ModuleProxy
 
-APP_VERSION = "0.1.10"
+APP_VERSION = "0.2.0"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -113,6 +113,63 @@ def _auth_expired(request: Request) -> Response:
     if _is_navigation(request):
         return RedirectResponse("/auth/login", status_code=303)
     raise HTTPException(status_code=401, detail="authentication required")
+
+
+def _require_admin(request: Request) -> dict:
+    """Dependency: access governance is an admin-only surface."""
+    session = _session(request)
+    if not session:
+        raise HTTPException(status_code=401, detail="authentication required")
+    if "admin" not in _session_roles(session):
+        raise HTTPException(status_code=403, detail="admin role required")
+    return session
+
+
+# Access governance (OpenMetadata-style): roles, group hierarchy, user
+# grants and policies, backed by the Keycloak service-account client.
+kc_admin = None
+if settings.kc_admin_base and settings.kc_admin_client_id and settings.kc_admin_client_secret:
+    _realm = settings.oidc_issuer.rstrip("/").rsplit("/realms/", 1)[-1]
+    from .access import KCAdmin, build_router
+
+    kc_admin = KCAdmin(
+        base=settings.kc_admin_base.rstrip("/"),
+        realm=_realm,
+        client_id=settings.kc_admin_client_id,
+        client_secret=settings.kc_admin_client_secret,
+    )
+    app.include_router(
+        build_router(kc_admin), dependencies=[Depends(_require_admin)])
+
+
+@app.get("/api/me")
+async def me(request: Request) -> dict:
+    """The caller's own session claims — used to prove rights propagation."""
+    session = _session(request)
+    if not session:
+        raise HTTPException(status_code=401, detail="authentication required")
+    claims = session.get("claims", {}) or {}
+    return {
+        "sub": claims.get("sub"),
+        "username": claims.get("preferred_username"),
+        "roles": sorted(_session_roles(session)),
+    }
+
+
+@app.get("/access", response_class=HTMLResponse)
+async def access_page(request: Request) -> Response:
+    session = _require_admin(request)
+    claims = session.get("claims", {}) or {}
+    return templates.TemplateResponse(
+        request,
+        "access.html",
+        {
+            "user": claims,
+            "modules": [dict(key=m.key, name=m.name, icon=m.icon, description=m.description) for m in modules.values()],
+            "ecosystem": ECOSYSTEM,
+            "active": "access",
+        },
+    )
 
 
 @app.get("/healthz")

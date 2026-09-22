@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Access · Arca Suite{% endblock %}
+{% block heading %}Access governance{% endblock %}
+{% block subheading %}Roles, groups, user grants and policies — rights propagate with the groups{% endblock %}
+
+{% block content %}
+<style>
+  .access-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .access-card { background: var(--surface, #fff); border: 1px solid var(--border, #e2e5ea); border-radius: 12px; padding: 16px; }
+  .access-card h3 { margin: 0 0 10px; font-size: 1rem; }
+  .access-card form { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .access-card input, .access-card select { padding: 8px 10px; border: 1px solid var(--border, #d0d4da); border-radius: 8px; background: var(--bg, #fff); color: inherit; flex: 1; min-width: 120px; }
+  .access-card button { padding: 8px 14px; border: 0; border-radius: 8px; background: var(--accent, #3b6ef5); color: #fff; cursor: pointer; }
+  .access-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .access-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border: 1px solid var(--border, #e2e5ea); border-radius: 8px; font-size: .9rem; }
+  .access-list li .meta { color: var(--text-secondary, #667); font-size: .8rem; }
+  .access-list li button { border: 0; background: transparent; color: #c0392b; cursor: pointer; }
+  .access-note { font-size: .8rem; color: var(--text-secondary, #667); margin-top: 8px; }
+</style>
+
+<div class="access-grid">
+  <section class="access-card">
+    <h3>Roles (rights)</h3>
+    <form onsubmit="return createRole(event)">
+      <input id="role-name" placeholder="new role name" required>
+      <button type="submit">Create</button>
+    </form>
+    <ul class="access-list" id="roles"></ul>
+  </section>
+
+  <section class="access-card">
+    <h3>Groups (regroupement)</h3>
+    <form onsubmit="return createGroup(event)">
+      <input id="group-name" placeholder="group name" required>
+      <input id="group-parent" list="group-options" placeholder="parent group (optional)">
+      <datalist id="group-options"></datalist>
+      <button type="submit">Create</button>
+    </form>
+    <ul class="access-list" id="groups"></ul>
+    <div class="access-note">A group nested under a parent inherits its role kit.</div>
+  </section>
+
+  <section class="access-card">
+    <h3>Memberships &amp; kits</h3>
+    <form onsubmit="return addMember(event)">
+      <input id="member-group" list="group-options2" placeholder="group" required>
+      <datalist id="group-options2"></datalist>
+      <input id="member-user" placeholder="username" required>
+      <button type="submit">Assign user</button>
+    </form>
+    <form onsubmit="return addKitRole(event)">
+      <input id="kit-group" list="group-options3" placeholder="group" required>
+      <datalist id="group-options3"></datalist>
+      <input id="kit-role" list="role-options" placeholder="role to attach" required>
+      <datalist id="role-options"></datalist>
+      <button type="submit">Attach role</button>
+    </form>
+    <ul class="access-list" id="group-detail"></ul>
+  </section>
+
+  <section class="access-card">
+    <h3>Policies (role → grants)</h3>
+    <form onsubmit="return createPolicy(event)">
+      <input id="policy-name" placeholder="policy name" required>
+      <input id="policy-role" list="role-options2" placeholder="role" required>
+      <datalist id="role-options2"></datalist>
+      <input id="policy-grant" placeholder="module:action (e.g. bench:read)" required>
+      <button type="submit">Declare</button>
+    </form>
+    <ul class="access-list" id="policies"></ul>
+    <div class="access-note">Grants land in the members' SSO tokens via the role kit; modules keep enforcing their own authorization.</div>
+  </section>
+</div>
+
+<script>
+async function api(path, opts) {
+  const r = await fetch(path, Object.assign({headers: {'Content-Type': 'application/json'}}, opts));
+  if (r.status === 204) return {};
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) { alert((body.detail || r.status) + ''); throw new Error(r.status); }
+  return body;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $id = i => document.getElementById(i);
+const elRoleName = $id('role-name'), elGroupName = $id('group-name'), elGroupParent = $id('group-parent');
+const elMemberGroup = $id('member-group'), elMemberUser = $id('member-user');
+const elKitGroup = $id('kit-group'), elKitRole = $id('kit-role');
+const elPolicyName = $id('policy-name'), elPolicyRole = $id('policy-role'), elPolicyGrant = $id('policy-grant');
+
+async function refresh() {
+  const [roles, groups, policies] = await Promise.all([
+    api('/admin/access/roles'), api('/admin/access/groups'), api('/admin/access/policies')]);
+  const roleNames = roles.roles || [];
+  document.getElementById('roles').innerHTML = roleNames.map(r =>
+    `<li><span>${esc(r)}</span><button onclick="delRole('${esc(r)}')" title="delete">✕</button></li>`).join('');
+  document.getElementById('role-options').innerHTML = roleNames.map(r => `<option value="${esc(r)}">`).join('');
+  document.getElementById('role-options2').innerHTML = document.getElementById('role-options').innerHTML;
+  const groupNames = (groups.groups || []).map(g => g.name);
+  document.getElementById('groups').innerHTML = (groups.groups || []).map(g =>
+    `<li><span>${esc(g.name)} ${g.parent ? `<span class="meta">⊂ ${esc(g.parent)}</span>` : ''}</span><button onclick="delGroup('${esc(g.name)}')" title="delete">✕</button></li>`).join('');
+  ['group-options','group-options2','group-options3'].forEach(id =>
+    document.getElementById(id).innerHTML = groupNames.map(n => `<option value="${esc(n)}">`).join(''));
+  document.getElementById('policies').innerHTML = (policies.policies || []).map(p =>
+    `<li><span>${esc(p.name)} <span class="meta">${esc(p.role)} → ${(p.grants||[]).map(g => esc(g.module+':'+g.action)).join(', ')}</span></span><button onclick="delPolicy('${esc(p.name)}')" title="delete">✕</button></li>`).join('');
+  // group detail: roles + members of the first selected group
+  const detail = document.getElementById('group-detail');
+  if (groupNames.length) {
+    const g = elMemberGroup.value || groupNames[0];
+    const [rolesR, membersR] = await Promise.all([
+      api('/admin/access/groups/' + encodeURIComponent(g) + '/roles'),
+      api('/admin/access/groups/' + encodeURIComponent(g) + '/members')]);
+    detail.innerHTML = `<li><span class="meta">${esc(g)} — roles: ${(rolesR.roles||[]).map(esc).join(', ') || 'none'}</span></li>` +
+      (membersR.members||[]).map(m => `<li><span>${esc(m.username||m)}</span></li>`).join('');
+  } else { detail.innerHTML = ''; }
+}
+
+function createRole(e) { e.preventDefault(); api('/admin/access/roles', {method:'POST', body: JSON.stringify({name: elRoleName.value})}).then(refresh); return false; }
+function delRole(n) { api('/admin/access/roles/' + encodeURIComponent(n), {method:'DELETE'}).then(refresh); }
+function createGroup(e) { e.preventDefault(); api('/admin/access/groups', {method:'POST', body: JSON.stringify({name: elGroupName.value, parent: elGroupParent.value || undefined})}).then(refresh); return false; }
+function delGroup(n) { api('/admin/access/groups/' + encodeURIComponent(n), {method:'DELETE'}).then(refresh); }
+function addMember(e) { e.preventDefault(); api('/admin/access/groups/' + encodeURIComponent(elMemberGroup.value) + '/members', {method:'POST', body: JSON.stringify({username: elMemberUser.value})}).then(refresh); return false; }
+function addKitRole(e) { e.preventDefault(); api('/admin/access/groups/' + encodeURIComponent(elKitGroup.value) + '/roles', {method:'POST', body: JSON.stringify({name: elKitRole.value})}).then(refresh); return false; }
+function createPolicy(e) { e.preventDefault();
+  const parts = elPolicyGrant.value.split(':');
+  api('/admin/access/policies', {method:'POST', body: JSON.stringify({name: elPolicyName.value, role: elPolicyRole.value, grants: [{module: parts[0], action: parts[1]}]})}).then(refresh); return false; }
+function delPolicy(n) { api('/admin/access/policies/' + encodeURIComponent(n), {method:'DELETE'}).then(refresh); }
+
+refresh();
+</script>
+{% endblock %}

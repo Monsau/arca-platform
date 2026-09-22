@@ -65,6 +65,15 @@
       </a>
       {% endfor %}
     </nav>
+    {% if user and user.roles and 'admin' in user.roles %}
+    <div class="nav-section-title"><span>Platform</span></div>
+    <nav aria-label="Platform administration">
+      <a class="nav-item {{ 'active' if active == 'access' }}" href="/access">
+        <span class="material-icons" aria-hidden="true">admin_panel_settings</span>
+        <span class="nav-item-label">Access</span>
+      </a>
+    </nav>
+    {% endif %}
     {% endif %}
 
     <div class="sidebar-footer">

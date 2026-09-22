@@ -31,6 +31,12 @@ class Settings:
     redis_url: str = field(default_factory=lambda: _env("PORTAL_REDIS_URL"))
     # Public base URL of the portal (used for post-logout redirect).
     public_base_url: str = field(default_factory=lambda: _env("PORTAL_PUBLIC_BASE_URL", ""))
+    # Access governance: Keycloak service-account client (manage-realm +
+    # manage-users) and the platform policy store (Postgres DSN).
+    kc_admin_base: str = field(default_factory=lambda: _env("PORTAL_KC_ADMIN_BASE"))
+    kc_admin_client_id: str = field(default_factory=lambda: _env("PORTAL_KC_ADMIN_CLIENT_ID"))
+    kc_admin_client_secret: str = field(default_factory=lambda: _env("PORTAL_KC_ADMIN_CLIENT_SECRET"))
+    policy_db_dsn: str = field(default_factory=lambda: _env("PORTAL_POLICY_DB_DSN"))
 
     @property
     def issuer(self) -> str:

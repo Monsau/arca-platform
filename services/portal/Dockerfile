@@ -10,7 +10,8 @@ RUN pip install --no-cache-dir \
     itsdangerous>=2.1 \
     jinja2>=3.1 \
     "PyJWT[crypto]>=2.8" \
-    redis>=5.0
+    redis>=5.0 \
+    "psycopg[binary]>=3.1"
 
 COPY services/portal/src /app/portal
 
