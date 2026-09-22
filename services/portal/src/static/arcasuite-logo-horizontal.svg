@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="192" viewBox="0 0 880 192" role="img" aria-label="Arca Suite">
+  <defs>
+    <linearGradient id="arcGradH" x1="0" y1="192" x2="192" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="tileGradH" x1="0" y1="0" x2="0" y2="192" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#131316"/>
+      <stop offset="1" stop-color="#0a0a0b"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="176" height="176" rx="42" fill="url(#tileGradH)" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>
+  <g fill="none" stroke="url(#arcGradH)" stroke-linecap="round">
+    <path d="M43 139 A53 53 0 0 1 149 139" stroke-width="14"/>
+    <path d="M62 139 A34 34 0 0 1 130 139" stroke-width="12" opacity="0.75"/>
+    <path d="M80 139 A16 16 0 0 1 112 139" stroke-width="10" opacity="0.55"/>
+  </g>
+  <circle cx="96" cy="70" r="12" fill="url(#arcGradH)"/>
+  <line x1="37" y1="155" x2="155" y2="155" stroke="rgba(255,255,255,0.14)" stroke-width="6" stroke-linecap="round"/>
+  <text x="216" y="118" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="64" font-weight="600" fill="#fafafa" letter-spacing="-0.5">Arca <tspan fill="#a5b4fc">Suite</tspan></text>
+  <text x="218" y="152" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="400" fill="#71717a" letter-spacing="0.5">Ontology-governed platform</text>
+</svg>

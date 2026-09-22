@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Arca Suite logo">
+  <defs>
+    <linearGradient id="arcGrad" x1="0" y1="512" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="tileGrad" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#131316"/>
+      <stop offset="1" stop-color="#0a0a0b"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded tile, ArcaQ dark theme -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#tileGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+  <!-- Arc / ark silhouette: three rising arcs meeting at a keystone node (ontology graph) -->
+  <g fill="none" stroke="url(#arcGrad)" stroke-linecap="round">
+    <path d="M120 372 A136 136 0 0 1 392 372" stroke-width="34"/>
+    <path d="M168 372 A88 88 0 0 1 344 372" stroke-width="30" opacity="0.75"/>
+    <path d="M216 372 A40 40 0 0 1 296 372" stroke-width="26" opacity="0.55"/>
+  </g>
+  <!-- Keystone node -->
+  <circle cx="256" cy="176" r="30" fill="url(#arcGrad)"/>
+  <circle cx="256" cy="176" r="30" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="3"/>
+  <!-- Baseline: the waterline the ark rests on -->
+  <line x1="104" y1="404" x2="408" y2="404" stroke="rgba(255,255,255,0.14)" stroke-width="14" stroke-linecap="round"/>
+</svg>
