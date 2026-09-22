@@ -93,24 +93,42 @@ class KCAdmin:
 
     # -- groups ---------------------------------------------------------------
     def list_groups(self) -> list[dict]:
-        _, tree = self.call("GET", "/groups")
+        """Full group list with parent links.
+
+        Keycloak's GET /groups returns top-level groups WITHOUT subGroups
+        populated in this version; searching by the exact top-level name
+        returns that group's subtree. We therefore expand every root via
+        search (small realm, admin-only surface — N+1 is acceptable).
+        """
+        _, tree = self.call("GET", "/groups?max=1000")
         flat = []
-
-        def walk(nodes, parent=None):
-            for g in nodes:
-                flat.append({"name": g["name"], "parent": parent})
-                walk(g.get("subGroups") or [], g["name"])
-
-        walk(tree)
+        for g in tree:
+            _, found = self.call(
+                "GET", f"/groups?search={urllib.parse.quote(g['name'], safe='')}")
+            node = next((n for n in found if n["name"] == g["name"]), None) or g
+            flat.append({"name": node["name"], "parent": None,
+                         "id": node.get("id")})
+            self._walk_subgroups(node, flat)
         return flat
 
+    @staticmethod
+    def _walk_subgroups(node, flat) -> None:
+        for sub in node.get("subGroups") or []:
+            flat.append({"name": sub["name"], "parent": node["name"],
+                         "id": sub.get("id")})
+            KCAdmin._walk_subgroups(sub, flat)
+
     def _group_id(self, name: str) -> str:
-        for g in self.list_groups():
-            if g["name"] == name:
-                _, found = self.call("GET", f"/groups?search={urllib.parse.quote(name, safe='')}")
-                for node in found:
-                    if node["name"] == name:
-                        return node["id"]
+        """Resolve a group id by exact name, walking search-result subtrees
+        (children are nested under their parent, never top-level results)."""
+        _, found = self.call(
+            "GET", f"/groups?search={urllib.parse.quote(name, safe='')}")
+        stack = list(found)
+        while stack:
+            node = stack.pop()
+            if node["name"] == name:
+                return node["id"]
+            stack.extend(node.get("subGroups") or [])
         raise HTTPException(status_code=404, detail=f"group not found: {name}")
 
     def create_group(self, name: str, parent: str | None = None) -> None:
