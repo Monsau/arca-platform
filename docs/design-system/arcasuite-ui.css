@@ -2,7 +2,16 @@
    Tokens are identical to the portal (services/portal/src/static/portal.css)
    so every module UI reads as one product with the ArcaQ design system.
    Dark theme is the default. Modules copy this file into their static assets
-   and MUST NOT redefine the tokens — overrides belong in a local layer only. */
+   and MUST NOT redefine the tokens — overrides belong in a local layer only.
+
+   API base contract: inside the portal the module UI is composed into the
+   /module/<key> document, so window.location is NOT the module prefix.
+   Resolve API paths from window.__ARCA_MODULE_BASE__ (injected by the
+   portal) with a /m/<key>/ location match as the standalone-dev fallback:
+
+     const base = window.__ARCA_MODULE_BASE__
+       || ((m = location.pathname.match(/^\/m\/([^/]+)\//)) ? '/m/' + m[1] + '/' : '/');
+     const API = base + 'api/v1'; */
 
 :root {
     --bg-primary: #0a0a0b;

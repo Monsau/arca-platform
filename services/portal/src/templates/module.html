@@ -29,6 +29,11 @@
       <button class="btn" onclick="reloadModule()">Retry</button>
     </div>
     <div class="module-content" id="module-content">
+      {# Module API base, injected by the portal: inside the composed document
+         window.location is the portal's /module/<key> path, so modules must
+         resolve their API prefix from this variable (fallback: standalone
+         dev behind /m/<key>/, detected from location as before). #}
+      <script>window.__ARCA_MODULE_BASE__ = "/m/{{ module.key }}/";</script>
       {{ module_markup | safe }}
     </div>
   </div>
