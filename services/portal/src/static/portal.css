@@ -234,6 +234,15 @@ a { color: inherit; text-decoration: none; }
     background: var(--bg-primary);
 }
 
+/* Identity-banner dedup under transclusion: the portal topbar already shows
+   the module name + description, so a transcluded mod-header would duplicate
+   them on every dashboard. Modules with real navigation in their header
+   (cockpit, cert, flow) keep the bar but lose the redundant title; title-only
+   headers disappear entirely. Standalone module access (direct ingress) is
+   unaffected — these selectors only match inside #module-content. */
+.module-content .mod-header h1 { display: none; }
+.module-content .mod-header:not(:has(nav)) { display: none; }
+
 /* ---- Overview page ----------------------------------------------------- */
 
 .overview {

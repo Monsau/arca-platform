@@ -23,7 +23,7 @@ from .config import Settings, load_ecosystem, load_modules
 from .proxy import ModuleProxy
 from .transclude import fetch_module_document
 
-APP_VERSION = "0.3.7"
+APP_VERSION = "0.3.8"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
