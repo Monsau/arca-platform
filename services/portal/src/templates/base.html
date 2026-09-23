@@ -102,6 +102,13 @@
       </div>
       <div class="topbar-actions">
         {% block topbar_actions %}{% endblock %}
+        {% if active %}
+        {# On a module page the overview must be one click away — navigation
+           by button, never by browser back. Hidden on the overview itself. #}
+        <button class="icon-btn" onclick="location.href='/'" title="Back to overview" aria-label="Back to overview" id="overview-btn">
+          <span class="material-icons" aria-hidden="true">dashboard</span>
+        </button>
+        {% endif %}
         <button class="palette-hint" id="palette-hint" onclick="openPalette()" title="Quick open (Ctrl+K)">
           <span class="material-icons" aria-hidden="true">search</span>
           <span>Quick open</span>
