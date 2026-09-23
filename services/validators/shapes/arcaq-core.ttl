@@ -1,0 +1,521 @@
+# ============================================================================
+# BUNDLED COPY — do not edit.
+# Source (arcaq repo): C:\projets\innovation\arcaq\config\ontologies\jena\core\arcaq-core.ttl
+# Updates must be re-copied from the arcaq repo; local edits are overwritten
+# on the next sync and will diverge from the canonical contracts.
+# ============================================================================
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix arcaq: <http://arcaq.com/ontology#> .
+
+# ============================================================================
+# ArcAQ Core Ontology — OWL 2 DL
+#
+# This ontology formalises the sovereign governance knowledge graph of ArcAQ.
+# It is loaded into Apache Jena Fuseki at startup and queried via SPARQL 1.1.
+#
+# Namespace: http://arcaq.com/ontology#
+# Version:   1.1.0
+# Author:    Mustapha Fonsau — ArcAQ Sovereign Decision Intelligence
+# License:   Proprietary — All Rights Reserved
+# Patent:    OMPIC / Sovereign Decision Intelligence (SDI)
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Ontology declaration
+# ----------------------------------------------------------------------------
+
+<http://arcaq.com/ontology>
+    a                     owl:Ontology ;
+    owl:versionIRI        <http://arcaq.com/ontology/1.0.0> ;
+    owl:versionInfo       "1.1.0" ;
+    dcterms:title         "ArcAQ Core Ontology"@en ,
+                          "Ontologie Noyau ArcAQ"@fr ;
+    dcterms:description   "Sovereign governance ontology covering data rules, regulations, classifications, jurisdictions and organisational entities."@en ;
+    dcterms:creator       "Mustapha Fonsau" ;
+    dcterms:rights        "Copyright © 2026 ArcAQ — All Rights Reserved" ;
+    rdfs:comment          "Conforms to OWL 2 DL profile. Intended for use with Apache Jena Fuseki SPARQL 1.1."@en .
+
+
+# ============================================================================
+# CLASS HIERARCHY
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Top-level governance classes
+# ----------------------------------------------------------------------------
+
+arcaq:GovernanceObject
+    a               owl:Class ;
+    rdfs:label      "Governance Object"@en , "Objet de Gouvernance"@fr ;
+    rdfs:comment    "Abstract root class for all ArcAQ governance entities."@en .
+
+arcaq:DataRule
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Data Rule"@en , "Règle de Données"@fr ;
+    rdfs:comment    "A formal rule governing how data may be processed, retained or shared."@en .
+
+arcaq:Regulation
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Regulation"@en , "Réglementation"@fr ;
+    rdfs:comment    "A binding legal instrument (law, decree, directive) applicable to data."@en .
+
+arcaq:DataClassification
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Data Classification"@en , "Classification des Données"@fr ;
+    rdfs:comment    "A sensitivity level assigned to data (Public, Internal, Confidential, Secret, Top Secret)."@en .
+
+arcaq:DataDomain
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Data Domain"@en , "Domaine de Données"@fr ;
+    rdfs:comment    "A logical grouping of related datasets (e.g. Finance, HR, Citizens)."@en .
+
+arcaq:DataEntity
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Data Entity"@en , "Entité de Données"@fr ;
+    rdfs:comment    "A concrete data asset: table, dataset, dashboard or data product."@en .
+
+arcaq:LegalDomain
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Legal Domain"@en , "Domaine Juridique"@fr , "المجال القانوني"@ar ;
+    rdfs:comment    "A jurisdiction-scoped legal domain (administrative, banking, fiscal law of a country). Root class conventionally used by all jena/domains/legal/* ontologies; declared here so the class is explicit rather than implicit."@en .
+
+# ----------------------------------------------------------------------------
+# Agent classes
+# ----------------------------------------------------------------------------
+
+arcaq:Agent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "AI Agent"@en , "Agent IA"@fr ;
+    rdfs:comment    "One of the 7 sovereign AI agents in the ArcAQ orchestration pipeline."@en .
+
+arcaq:ConnectAgent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:Agent ;
+    rdfs:label      "Connect Agent"@en , "Agent Connect"@fr ;
+    rdfs:comment    "Connects to enterprise data sources (PostgreSQL, OpenMetadata, Qdrant)."@en .
+
+arcaq:ShieldAgent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:Agent ;
+    rdfs:label      "Shield Agent"@en , "Agent Shield"@fr ;
+    rdfs:comment    "Applies the 4-layer SCAG compliance filter to requests and responses."@en .
+
+arcaq:VaultAgent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:Agent ;
+    rdfs:label      "Vault Agent"@en , "Agent Vault"@fr ;
+    rdfs:comment    "Enforces ReBAC authorisation via OpenFGA (Zanzibar model)."@en .
+
+arcaq:BrainAgent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:Agent ;
+    rdfs:label      "Brain Agent"@en , "Agent Brain"@fr ;
+    rdfs:comment    "Runs LLM inference against Jena SPARQL certified knowledge with Qdrant fallback."@en .
+
+arcaq:RefineryAgent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:Agent ;
+    rdfs:label      "Refinery Agent"@en , "Agent Refinery"@fr ;
+    rdfs:comment    "Post-processes and corrects LLM responses (anti-hallucination, expert consensus)."@en .
+
+arcaq:IngestionAgent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:Agent ;
+    rdfs:label      "Brain-Ingestion Agent"@en , "Agent Brain-Ingestion"@fr ;
+    rdfs:comment    "Ingests documents into the Qdrant vector store and the Jena knowledge graph."@en .
+
+arcaq:OrchestratorAgent
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:Agent ;
+    rdfs:label      "Orchestrator Agent"@en , "Agent Orchestrateur"@fr ;
+    rdfs:comment    "Coordinates the sovereign agent pipeline (workflow orchestration)."@en .
+
+# ----------------------------------------------------------------------------
+# Compliance & jurisdiction classes
+# ----------------------------------------------------------------------------
+
+arcaq:Jurisdiction
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Jurisdiction"@en , "Juridiction"@fr ;
+    rdfs:comment    "A legal jurisdiction in which a regulation or rule applies (e.g. FR, MA, EU)."@en .
+
+arcaq:ComplianceRule
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:DataRule ;
+    rdfs:label      "Compliance Rule"@en , "Règle de Conformité"@fr ;
+    rdfs:comment    "A rule derived from a Regulation for a specific Jurisdiction."@en .
+
+arcaq:SCaGLayer
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "SCAG Layer"@en , "Couche SCAG"@fr ;
+    rdfs:comment    "One of the 4 sovereign compliance filter layers: Legal, Hierarchical, Cultural, Strategic."@en .
+
+arcaq:ProcessingPurpose
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Processing Purpose"@en , "Finalité de Traitement"@fr ;
+    rdfs:comment    "Legitimate purpose for which personal or sensitive data may be processed."@en .
+
+
+# ============================================================================
+# OBJECT PROPERTIES
+# ============================================================================
+
+arcaq:governedBy
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:DataEntity ;
+    rdfs:range      arcaq:DataRule ;
+    rdfs:label      "governed by"@en ;
+    rdfs:comment    "Links a data entity to the rules that govern it."@en .
+
+arcaq:classifiedAs
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:DataEntity ;
+    rdfs:range      arcaq:DataClassification ;
+    rdfs:label      "classified as"@en ;
+    rdfs:comment    "Assigns a sensitivity classification to a data entity."@en .
+
+arcaq:belongsToDomain
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      arcaq:DataDomain ;
+    rdfs:label      "belongs to domain"@en , "appartient au domaine"@fr ;
+    rdfs:comment    "Anchors a governance object to its primary data domain. Widened from DataEntity to GovernanceObject so the property matches the sc:GovernanceObjectDomain contract without inference contamination."@en .
+
+arcaq:derivedFrom
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:ComplianceRule ;
+    rdfs:range      arcaq:Regulation ;
+    rdfs:label      "derived from"@en ;
+    rdfs:comment    "Traces a compliance rule back to its legal source."@en .
+
+arcaq:appliesInJurisdiction
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      arcaq:Jurisdiction ;
+    rdfs:label      "applies in jurisdiction"@en .
+
+arcaq:groundedIn
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      arcaq:Regulation ;
+    rdfs:label      "grounded in"@en , "ancré dans"@fr ;
+    rdfs:comment    "Normative grounding: links a governance object to the Regulation instance it derives from. Use this for object references; arcaq:legalBasis remains the string-citation (article-level) companion."@en .
+
+arcaq:processedForPurpose
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:DataEntity ;
+    rdfs:range      arcaq:ProcessingPurpose ;
+    rdfs:label      "processed for purpose"@en .
+
+arcaq:handledByAgent
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:DataEntity ;
+    rdfs:range      arcaq:Agent ;
+    rdfs:label      "handled by agent"@en .
+
+arcaq:filteredByLayer
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:DataEntity ;
+    rdfs:range      arcaq:SCaGLayer ;
+    rdfs:label      "filtered by SCAG layer"@en .
+
+arcaq:autoLinkedTo
+    a               owl:ObjectProperty ;
+    rdfs:domain     owl:Thing ;
+    rdfs:range      owl:Thing ;
+    rdfs:label      "auto-linked to"@en , "lié automatiquement à"@fr ;
+    rdfs:comment    "Inferred semantic link between two entities, discovered by an auto-linking engine (LLM or rules-based). Every assertion must be accompanied by an arcaq:SemanticRelation node carrying confidence, inference method and provenance graph."@en .
+
+# ----------------------------------------------------------------------------
+# Semantic Relation — inferred link metadata class
+# ----------------------------------------------------------------------------
+
+arcaq:SemanticRelation
+    a               owl:Class ;
+    rdfs:subClassOf arcaq:GovernanceObject ;
+    rdfs:label      "Semantic Relation"@en , "Relation Sémantique"@fr ;
+    rdfs:comment    "A reified inferred relationship between two entities. Carries confidence score, inference method, provenance graph and optional temporal conflict information. Required by SHACL contract sc:SemanticRelationShape."@en .
+
+arcaq:confidenceScore
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      xsd:decimal ;
+    rdfs:label      "confidence score"@en ;
+    rdfs:comment    "Confidence of the inferred relationship, in [0.0, 1.0]."@en .
+
+arcaq:inferredBy
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "inferred by"@en ;
+    rdfs:comment    "Inference method: one of symbolic | ml | llm | human | hybrid."@en .
+
+arcaq:provenanceGraph
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      owl:Thing ;
+    rdfs:label      "provenance graph"@en ;
+    rdfs:comment    "IRI of the named graph in which the inferred fact was stored."@en .
+
+arcaq:linkSource
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      owl:Thing ;
+    rdfs:label      "link source"@en .
+
+arcaq:linkTarget
+    a               owl:ObjectProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      owl:Thing ;
+    rdfs:label      "link target"@en .
+
+arcaq:linkPredicate
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      xsd:anyURI ;
+    rdfs:label      "link predicate"@en .
+
+arcaq:linkReason
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "link reason"@en ;
+    rdfs:comment    "Human-readable explanation for why this relationship was inferred."@en .
+
+arcaq:linkCreatedAt
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      xsd:dateTime ;
+    rdfs:label      "link created at"@en ;
+    rdfs:comment    "Wall-clock timestamp when the auto-link was first asserted. Superseded by bi-temporal transaction-time metadata in newer records."@en .
+
+arcaq:temporalConflictReason
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:SemanticRelation ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "temporal conflict reason"@en ;
+    rdfs:comment    "Set when the auto-link is retroactive (vt_start < tt_start). Explains the gap between world-truth and system-knowledge."@en .
+
+
+# ============================================================================
+# DATATYPE PROPERTIES
+# ============================================================================
+
+arcaq:sensitivityLevel
+    a               owl:DatatypeProperty ;
+    rdfs:domain     owl:Thing ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "sensitivity level"@en ;
+    rdfs:comment    "One of: PUBLIC, INTERNAL, CONFIDENTIAL, SECRET, TOP_SECRET."@en .
+
+arcaq:applicableJurisdiction
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "applicable jurisdiction"@en .
+
+arcaq:legalBasis
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "legal basis"@en ;
+    rdfs:comment    "Free-text legal citation (article-level). For object references to a Regulation instance use arcaq:groundedIn instead."@en .
+
+arcaq:retentionPeriod
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "retention period"@en .
+
+arcaq:dataController
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "data controller"@en .
+
+arcaq:effectiveDate
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:Regulation ;
+    rdfs:range      xsd:date ;
+    rdfs:label      "effective date"@en .
+
+arcaq:ruleType
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "rule type"@en ;
+    rdfs:comment    "Functional category of the governance object (e.g. PROCESSING, RETENTION, ACCESS, EXPORT, DELETION, CLASSIFICATION, FILTRE_SCAG_Lx)."@en .
+
+arcaq:impactLevel
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "impact level"@en .
+
+arcaq:processingPurpose
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:GovernanceObject ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "processing purpose"@en .
+
+arcaq:dataCategory
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:DataEntity ;
+    rdfs:range      xsd:string ;
+    rdfs:label      "data category"@en .
+
+arcaq:columnCount
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:DataEntity ;
+    rdfs:range      xsd:integer ;
+    rdfs:label      "column count"@en .
+
+arcaq:airgapped
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:Agent ;
+    rdfs:range      xsd:boolean ;
+    rdfs:label      "is air-gapped"@en .
+
+arcaq:scagLayerIndex
+    a               owl:DatatypeProperty ;
+    rdfs:domain     arcaq:SCaGLayer ;
+    rdfs:range      xsd:integer ;
+    rdfs:label      "SCAG layer index"@en ;
+    rdfs:comment    "1=Legal, 2=Hierarchical, 3=Cultural, 4=Strategic."@en .
+
+
+# ============================================================================
+# NAMED INDIVIDUALS — SCAG Layers
+# ============================================================================
+
+arcaq:SCaGLayer_Legal
+    a                    arcaq:SCaGLayer ;
+    rdfs:label           "Legal / PII Filter"@en ;
+    arcaq:scagLayerIndex 1 ;
+    rdfs:comment         "Detects PII, GDPR violations, and illegal content."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:SCaGLayer_Hierarchical
+    a                    arcaq:SCaGLayer ;
+    rdfs:label           "Hierarchical / ReBAC Filter"@en ;
+    arcaq:scagLayerIndex 2 ;
+    rdfs:comment         "Enforces role-based access using OpenFGA Zanzibar model."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:SCaGLayer_Cultural
+    a                    arcaq:SCaGLayer ;
+    rdfs:label           "Cultural / Ethical Filter"@en ;
+    arcaq:scagLayerIndex 3 ;
+    rdfs:comment         "Detects culturally sensitive or ethically problematic content."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:SCaGLayer_Strategic
+    a                    arcaq:SCaGLayer ;
+    rdfs:label           "Strategic / Intangible Filter"@en ;
+    arcaq:scagLayerIndex 4 ;
+    rdfs:comment         "Protects strategic intelligence, trade secrets and intangible assets."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+
+# ============================================================================
+# NAMED INDIVIDUALS — Data Classification Levels
+# ============================================================================
+
+arcaq:ClassificationPublic
+    a                        arcaq:DataClassification ;
+    rdfs:label               "Public"@en ;
+    arcaq:sensitivityLevel   "PUBLIC"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassificationInternal
+    a                        arcaq:DataClassification ;
+    rdfs:label               "Internal"@en ;
+    arcaq:sensitivityLevel   "INTERNAL"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassificationConfidential
+    a                        arcaq:DataClassification ;
+    rdfs:label               "Confidential"@en ;
+    arcaq:sensitivityLevel   "CONFIDENTIAL"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassificationSecret
+    a                        arcaq:DataClassification ;
+    rdfs:label               "Secret"@en ;
+    arcaq:sensitivityLevel   "SECRET"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassificationTopSecret
+    a                        arcaq:DataClassification ;
+    rdfs:label               "Top Secret"@en ;
+    arcaq:sensitivityLevel   "TOP_SECRET"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+
+# ============================================================================
+# NAMED INDIVIDUALS — AI Agents
+# ============================================================================
+
+arcaq:Agent_Connect
+    a              arcaq:ConnectAgent ;
+    rdfs:label     "Connect Agent"@en ;
+    arcaq:airgapped true ;
+    rdfs:comment   "Retrieves data from internal connectors (PostgreSQL, OpenMetadata, Qdrant)."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:Agent_Shield
+    a              arcaq:ShieldAgent ;
+    rdfs:label     "Shield Agent"@en ;
+    arcaq:airgapped true ;
+    rdfs:comment   "Applies 4-layer SCAG filter to requests and responses."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:Agent_Vault
+    a              arcaq:VaultAgent ;
+    rdfs:label     "Vault Agent"@en ;
+    arcaq:airgapped true ;
+    rdfs:comment   "Enforces ReBAC authorisation via OpenFGA."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:Agent_Brain
+    a              arcaq:BrainAgent ;
+    rdfs:label     "Brain Agent"@en ;
+    arcaq:airgapped true ;
+    rdfs:comment   "Runs LLM inference against Jena SPARQL + Qdrant context."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:Agent_Refinery
+    a              arcaq:RefineryAgent ;
+    rdfs:label     "Refinery Agent"@en ;
+    arcaq:airgapped true ;
+    rdfs:comment   "Post-processes and corrects LLM responses (anti-hallucination)."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:Agent_Ingestion
+    a              arcaq:IngestionAgent ;
+    rdfs:label     "Brain-Ingestion Agent"@en ;
+    arcaq:airgapped true ;
+    rdfs:comment   "Ingests documents into Qdrant vector store and Jena knowledge graph."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .
+
+arcaq:Agent_Orchestrator
+    a              arcaq:OrchestratorAgent ;
+    rdfs:label     "Orchestrator Agent"@en ;
+    arcaq:airgapped true ;
+    rdfs:comment   "Coordinates the 6 agents via Temporal.io workflows."@en  ;
+    arcaq:belongsToDomain  arcaq:Domain_Technologie .

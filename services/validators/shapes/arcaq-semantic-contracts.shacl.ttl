@@ -1,0 +1,308 @@
+# ============================================================================
+# BUNDLED COPY — do not edit.
+# Source (arcaq repo): C:\projets\innovation\arcaq\config\ontologies\shacl\arcaq-semantic-contracts.shacl.ttl
+# Updates must be re-copied from the arcaq repo; local edits are overwritten
+# on the next sync and will diverge from the canonical contracts.
+# ============================================================================
+# ============================================================================
+# ArcaQ Semantic Contracts — SHACL Validation Shapes
+#
+# Enforces structural and semantic integrity for all ontology changes.
+# Used in the Ontology CI/CD pipeline as a quality gate before any release.
+#
+# Namespace: http://arcaq.com/shacl#
+# Version:   1.1.0
+# Profile:   SHACL Core + SHACL-SPARQL (Jena-compatible)
+# ============================================================================
+
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix arcaq:   <http://arcaq.com/ontology#> .
+@prefix sc:      <http://arcaq.com/shacl#> .
+
+# ============================================================================
+# CONTRACT: Every named class MUST have rdfs:label in EN and FR
+# ============================================================================
+
+sc:ClassBilingualLabelShape
+    a sh:NodeShape ;
+    sh:targetClass owl:Class ;
+    sh:name "ClassBilingualLabel" ;
+    sh:description "Every named OWL Class must have at least one rdfs:label in English and one in French. Anonymous class expressions (e.g. unionOf ranges) are structural constructs, not vocabulary terms, and are excluded via isIRI($this)." ;
+    sh:severity sh:Violation ;
+
+    sh:sparql [
+        sh:message "Class is missing at least one rdfs:label." ;
+        sh:prefixes <http://arcaq.com/ontology> ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER(isIRI($this))
+                FILTER NOT EXISTS { $this rdfs:label ?label }
+            }
+        """ ;
+    ] ;
+
+    sh:sparql [
+        sh:message "Class is missing rdfs:label in English (@en)." ;
+        sh:prefixes <http://arcaq.com/ontology> ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER(isIRI($this))
+                FILTER NOT EXISTS {
+                    $this rdfs:label ?label .
+                    FILTER(LANG(?label) = "en")
+                }
+            }
+        """ ;
+    ] ;
+
+    sh:sparql [
+        sh:message "Class is missing rdfs:label in French (@fr)." ;
+        sh:prefixes <http://arcaq.com/ontology> ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER(isIRI($this))
+                FILTER NOT EXISTS {
+                    $this rdfs:label ?label .
+                    FILTER(LANG(?label) = "fr")
+                }
+            }
+        """ ;
+    ] .
+
+# ============================================================================
+# CONTRACT: Every named class MUST have rdfs:comment (documentation)
+# ============================================================================
+
+sc:ClassDocumentationShape
+    a sh:NodeShape ;
+    sh:targetClass owl:Class ;
+    sh:name "ClassDocumentation" ;
+    sh:severity sh:Warning ;
+    sh:sparql [
+        sh:message "Class is missing rdfs:comment (documentation string)." ;
+        sh:prefixes <http://arcaq.com/ontology> ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER(isIRI($this))
+                FILTER NOT EXISTS { $this rdfs:comment ?comment }
+            }
+        """ ;
+    ] .
+
+# ============================================================================
+# CONTRACT: GovernanceObject subclasses must declare their DataDomain
+# ============================================================================
+
+sc:GovernanceObjectDomainShape
+    a sh:NodeShape ;
+    sh:targetClass arcaq:GovernanceObject ;
+    sh:name "GovernanceObjectDomain" ;
+    sh:severity sh:Violation ;
+
+    # value typing: when present, belongsToDomain must point to a DataDomain instance
+    sh:property [
+        sh:path arcaq:belongsToDomain ;
+        sh:class arcaq:DataDomain ;
+        sh:message "belongsToDomain must reference an arcaq:DataDomain instance." ;
+    ] ;
+
+    # requirement as SPARQL so DataDomain roots can be excluded without regress
+    sh:sparql [
+        sh:message "Every GovernanceObject instance (DataDomain roots excluded) must reference at least one arcaq:DataDomain via arcaq:belongsToDomain." ;
+        sh:select """
+            PREFIX arcaq: <http://arcaq.com/ontology#>
+            SELECT $this WHERE {
+                $this a arcaq:GovernanceObject .
+                FILTER NOT EXISTS { $this a arcaq:DataDomain }
+                FILTER NOT EXISTS { $this arcaq:belongsToDomain ?domain }
+            }
+        """ ;
+    ] .
+
+# ============================================================================
+# CONTRACT: DataRule — must have jurisdictions and classification
+# ============================================================================
+
+sc:DataRuleShape
+    a sh:NodeShape ;
+    sh:targetClass arcaq:DataRule ;
+    sh:name "DataRuleContract" ;
+    sh:severity sh:Violation ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "DataRule must have a label." ;
+    ] ;
+
+    sh:property [
+        sh:path arcaq:appliesInJurisdiction ;
+        sh:minCount 1 ;
+        sh:message "DataRule must specify at least one jurisdiction via arcaq:appliesInJurisdiction." ;
+    ] ;
+
+    sh:property [
+        sh:path arcaq:hasClassification ;
+        sh:maxCount 1 ;
+        sh:class arcaq:DataClassification ;
+        sh:message "DataRule may reference at most one DataClassification." ;
+    ] .
+
+# ============================================================================
+# CONTRACT: Regulation — must have enforcement date and source URI
+# ============================================================================
+
+sc:RegulationShape
+    a sh:NodeShape ;
+    sh:targetClass arcaq:Regulation ;
+    sh:name "RegulationContract" ;
+    sh:severity sh:Violation ;
+
+    sh:property [
+        sh:path dcterms:issued ;
+        sh:minCount 1 ;
+        sh:datatype xsd:date ;
+        sh:message "Regulation must have a dcterms:issued date." ;
+    ] ;
+
+    sh:property [
+        sh:path dcterms:source ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "Regulation must have a dcterms:source IRI pointing to the official text." ;
+    ] .
+
+# ============================================================================
+# CONTRACT: DataClassification — exactly 5 levels (Public, Internal, Confidential, Secret, Top Secret)
+# ============================================================================
+
+sc:DataClassificationShape
+    a sh:NodeShape ;
+    sh:targetClass arcaq:DataClassification ;
+    sh:name "DataClassificationEnum" ;
+    sh:severity sh:Violation ;
+    sh:property [
+        sh:path arcaq:sensitivityLevel ;
+        sh:minCount 1 ;
+        sh:in ( "PUBLIC" "INTERNAL" "CONFIDENTIAL" "SECRET" "TOP_SECRET" ) ;
+        sh:message "DataClassification arcaq:sensitivityLevel must be one of: PUBLIC, INTERNAL, CONFIDENTIAL, SECRET, TOP_SECRET." ;
+    ] .
+
+# ============================================================================
+# CONTRACT: KPI — must have formula, unit, and certification status
+# ============================================================================
+
+sc:KPIShape
+    a sh:NodeShape ;
+    sh:targetClass arcaq:KPI ;
+    sh:name "KPIContract" ;
+    sh:severity sh:Violation ;
+
+    sh:property [
+        sh:path arcaq:kpiFormula ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "KPI must define arcaq:kpiFormula." ;
+    ] ;
+
+    sh:property [
+        sh:path arcaq:kpiUnit ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "KPI must define arcaq:kpiUnit (e.g. 'percent', 'count', 'ratio')." ;
+    ] ;
+
+    sh:property [
+        sh:path arcaq:certifiedBy ;
+        sh:minCount 1 ;
+        sh:message "KPI must be certified by a named expert (arcaq:certifiedBy)." ;
+    ] ;
+
+    sh:property [
+        sh:path arcaq:certifiedAt ;
+        sh:minCount 1 ;
+        sh:datatype xsd:dateTime ;
+        sh:message "KPI must carry a certification timestamp (arcaq:certifiedAt)." ;
+    ] .
+
+# ============================================================================
+# CONTRACT: No orphan individuals (every individual must have a known type)
+# ============================================================================
+
+sc:NoOrphanIndividualShape
+    a sh:NodeShape ;
+    sh:targetSubjectsOf rdf:type ;
+    sh:name "NoOrphanIndividual" ;
+    sh:severity sh:Warning ;
+    sh:sparql [
+        sh:message "Individual has rdf:type but the type is not a known arcaq: class." ;
+        sh:prefixes <http://arcaq.com/ontology> ;
+        sh:select """
+            SELECT $this WHERE {
+                $this rdf:type ?t .
+                FILTER(STRSTARTS(STR(?t), "http://arcaq.com/ontology#"))
+                FILTER NOT EXISTS { ?t a owl:Class }
+            }
+        """ ;
+    ] .
+
+# ============================================================================
+# CONTRACT: Deprecated concepts must carry arcaq:deprecatedSince date
+# ============================================================================
+
+sc:DeprecationDateShape
+    a sh:NodeShape ;
+    sh:targetSubjectsOf owl:deprecated ;
+    sh:name "DeprecationDate" ;
+    sh:severity sh:Violation ;
+    sh:property [
+        sh:path arcaq:deprecatedSince ;
+        sh:minCount 1 ;
+        sh:datatype xsd:date ;
+        sh:message "Deprecated concept must carry arcaq:deprecatedSince date." ;
+    ] ;
+    sh:property [
+        sh:path arcaq:replacedBy ;
+        sh:message "Deprecated concept should declare arcaq:replacedBy (recommended)." ;
+        sh:severity sh:Warning ;
+    ] .
+
+# ============================================================================
+# CONTRACT: SemanticRelation — must have confidence score and provenance
+# ============================================================================
+
+sc:SemanticRelationShape
+    a sh:NodeShape ;
+    sh:targetClass arcaq:SemanticRelation ;
+    sh:name "SemanticRelationContract" ;
+    sh:severity sh:Violation ;
+
+    sh:property [
+        sh:path arcaq:confidenceScore ;
+        sh:minCount 1 ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "SemanticRelation must have a confidenceScore between 0.0 and 1.0." ;
+    ] ;
+
+    sh:property [
+        sh:path arcaq:inferredBy ;
+        sh:minCount 1 ;
+        sh:in ( "symbolic" "ml" "llm" "human" "hybrid" ) ;
+        sh:message "SemanticRelation must declare the inference method: symbolic | ml | llm | human | hybrid." ;
+    ] ;
+
+    sh:property [
+        sh:path arcaq:provenanceGraph ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "SemanticRelation must reference its provenance named graph." ;
+    ] .

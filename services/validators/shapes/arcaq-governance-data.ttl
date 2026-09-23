@@ -1,0 +1,558 @@
+# ============================================================================
+# BUNDLED COPY — do not edit.
+# Source (arcaq repo): C:\projets\innovation\arcaq\config\ontologies\jena\core\arcaq-governance-data.ttl
+# Updates must be re-copied from the arcaq repo; local edits are overwritten
+# on the next sync and will diverge from the canonical contracts.
+# ============================================================================
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix arcaq: <http://arcaq.com/ontology#> .
+
+# ============================================================================
+# ArcAQ Governance Instance Data — Sovereign Knowledge Graph
+#
+# This file contains the OPERATIONAL governance facts:
+#   • Data processing rules (règles de traitement)
+#   • Regulations (GDPR, Banking, ISO27001, Public Sector)
+#   • Compliance rules per jurisdiction
+#   • Data domains (finance, RH, santé, stratégique, citoyen)
+#   • Jurisdictions
+#   • Processing purposes
+#
+# Loaded into Jena Fuseki at startup via load_ontologies.py or seed_jena.py.
+# Named graph: http://arcaq.com/ontology/arcaq-governance-data
+# ============================================================================
+
+# ============================================================================
+# JURISDICTIONS
+# ============================================================================
+
+arcaq:Jurisdiction_FR
+    a                         arcaq:Jurisdiction ;
+    rdfs:label                "France" ;
+    arcaq:applicableJurisdiction "FR" ;
+    arcaq:description         "Juridiction française — CNIL, RGPD, loi Informatique et Libertés"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Jurisdiction_MA
+    a                         arcaq:Jurisdiction ;
+    rdfs:label                "Maroc" ;
+    arcaq:applicableJurisdiction "MA" ;
+    arcaq:description         "Juridiction marocaine — CNDP, loi 09-08 sur la protection des données personnelles"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Jurisdiction_EU
+    a                         arcaq:Jurisdiction ;
+    rdfs:label                "Union Européenne" ;
+    arcaq:applicableJurisdiction "EU" ;
+    arcaq:description         "Réglementation européenne — RGPD, DSP2, DORA, NIS2"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Jurisdiction_LU
+    a                         arcaq:Jurisdiction ;
+    rdfs:label                "Luxembourg" ;
+    arcaq:applicableJurisdiction "LU" ;
+    arcaq:description         "Juridiction luxembourgeoise — CNPD, loi du 1er août 2018"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+
+# ============================================================================
+# REGULATIONS
+# ============================================================================
+
+arcaq:Regulation_GDPR
+    a                      arcaq:Regulation ;
+    rdfs:label             "RGPD — Règlement Général sur la Protection des Données" ;
+    arcaq:name             "RGPD / GDPR" ;
+    arcaq:description      "Règlement (UE) 2016/679 du Parlement européen relatif à la protection des personnes physiques à l'égard du traitement des données à caractère personnel. Base légale principale pour tout traitement de données personnelles dans l'Union Européenne." ;
+    arcaq:effectiveDate    "2018-05-25"^^xsd:date ;
+    arcaq:applicableJurisdiction "EU" ;
+    arcaq:reference        "Règlement UE 2016/679" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:ruleType         "PROTECTION_DONNEES_PERSONNELLES" ;
+    arcaq:scope            "Toute organisation traitant des données de résidents européens"  ;
+    dcterms:issued         "2016-05-04"^^xsd:date ;
+    dcterms:source         <http://data.europa.eu/eli/reg/2016/679/oj> ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Regulation_LI_FR
+    a                      arcaq:Regulation ;
+    rdfs:label             "Loi Informatique et Libertés (France)" ;
+    arcaq:name             "Loi Informatique et Libertés modifiée" ;
+    arcaq:description      "Loi française n°78-17 du 6 janvier 1978 modifiée relative à l'informatique, aux fichiers et aux libertés. Transpose et complète le RGPD en droit national français. Supervisée par la CNIL." ;
+    arcaq:effectiveDate    "1978-01-06"^^xsd:date ;
+    arcaq:applicableJurisdiction "FR" ;
+    arcaq:reference        "Loi 78-17 modifiée par loi 2018-493" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:dataController   "CNIL (Commission Nationale de l'Informatique et des Libertés)"  ;
+    dcterms:issued         "1978-01-06"^^xsd:date ;
+    dcterms:source         <https://www.cnil.fr/fr/loi-78-17-du-6-janvier-1978-modifiee> ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Regulation_Loi0908_MA
+    a                      arcaq:Regulation ;
+    rdfs:label             "Loi 09-08 — Protection des données personnelles (Maroc)" ;
+    arcaq:name             "Loi 09-08 Maroc" ;
+    arcaq:description      "Loi marocaine 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel. Supervisée par la CNDP (Commission Nationale de contrôle de la protection des Données à caractère Personnel)." ;
+    arcaq:effectiveDate    "2009-02-18"^^xsd:date ;
+    arcaq:applicableJurisdiction "MA" ;
+    arcaq:reference        "Loi 09-08 du Dahir n° 1-09-15" ;
+    arcaq:dataController   "CNDP (Commission Nationale de contrôle de la protection des Données Personnelles)"  ;
+    dcterms:issued         "2009-03-05"^^xsd:date ;
+    dcterms:source         <https://www.cndp.ma/loi-09-08/> ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Regulation_ISO27001
+    a                      arcaq:Regulation ;
+    rdfs:label             "ISO 27001 — Sécurité de l'information" ;
+    arcaq:name             "ISO/IEC 27001:2022" ;
+    arcaq:description      "Norme internationale pour les systèmes de management de la sécurité de l'information (SMSI). Couvre la confidentialité, l'intégrité et la disponibilité des informations. Applicable aux organisations multinationales et aux banques centrales." ;
+    arcaq:applicableJurisdiction "INTERNATIONAL" ;
+    arcaq:reference        "ISO/IEC 27001:2022" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:ruleType         "SECURITE_INFORMATION"  ;
+    dcterms:issued         "2022-10-25"^^xsd:date ;
+    dcterms:source         <https://www.iso.org/standard/82875.html> ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Regulation_SOX
+    a                      arcaq:Regulation ;
+    rdfs:label             "SOX — Sarbanes-Oxley Act" ;
+    arcaq:name             "Sarbanes-Oxley Act (SOX)" ;
+    arcaq:description      "Loi américaine de 2002 sur la responsabilité des entreprises. Impose des contrôles stricts sur les données financières, les processus comptables et la conservation des données financières pendant 7 ans minimum." ;
+    arcaq:effectiveDate    "2002-07-30"^^xsd:date ;
+    arcaq:applicableJurisdiction "INTERNATIONAL" ;
+    arcaq:reference        "US Public Law 107-204" ;
+    arcaq:ruleType         "DONNEES_FINANCIERES" ;
+    arcaq:retentionPeriod  "7 ans minimum pour les données financières et comptables"  ;
+    dcterms:issued         "2002-07-30"^^xsd:date ;
+    dcterms:source         <https://www.govinfo.gov/app/details/PLAW-107publ204> ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Regulation_BaselIII
+    a                      arcaq:Regulation ;
+    rdfs:label             "Bâle III — Réglementation bancaire internationale" ;
+    arcaq:name             "Accords de Bâle III / Basel III" ;
+    arcaq:description      "Réglementation bancaire internationale établie par le Comité de Bâle (BIS). Impose des exigences strictes sur la gestion des données de risque, la déclaration prudentielle et la conservation des données transactionnelles." ;
+    arcaq:applicableJurisdiction "INTERNATIONAL" ;
+    arcaq:reference        "BIS Basel III Framework 2017" ;
+    arcaq:ruleType         "DONNEES_BANCAIRES" ;
+    arcaq:impactLevel      "ÉLEVÉ"  ;
+    dcterms:issued         "2010-12-16"^^xsd:date ;
+    dcterms:source         <https://www.bis.org/publ/bcbs189.htm> ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Regulation_SecteurPublic
+    a                      arcaq:Regulation ;
+    rdfs:label             "Réglementation secteur public — Données administratives" ;
+    arcaq:name             "Réglementation données secteur public" ;
+    arcaq:description      "Ensemble des réglementations applicables au traitement des données dans le secteur public : transparence, accès aux données citoyennes, interopérabilité, conservation des archives administratives." ;
+    arcaq:applicableJurisdiction "FR" ;
+    arcaq:ruleType         "DONNEES_ADMINISTRATIVES" ;
+    arcaq:retentionPeriod  "Variable selon type: archives courantes 5 ans, archives définitives conservation permanente"  ;
+    dcterms:issued         "2016-10-07"^^xsd:date ;
+    dcterms:source         <https://www.legifrance.gouv.fr/eli/loi/2016/10/7/2016-1321/jo/texte> ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+
+# ============================================================================
+# PROCESSING PURPOSES
+# ============================================================================
+
+arcaq:Purpose_GestionRH
+    a                      arcaq:ProcessingPurpose ;
+    rdfs:label             "Gestion des ressources humaines" ;
+    arcaq:description      "Traitement des données personnelles des employés : paie, recrutement, formation, gestion de carrière, évaluation de la performance." ;
+    arcaq:legalBasis       "Contrat de travail (RGPD Art. 6.1.b) et obligations légales (Art. 6.1.c)"  ;
+    arcaq:belongsToDomain  arcaq:Domain_RH .
+
+arcaq:Purpose_GestionFinanciere
+    a                      arcaq:ProcessingPurpose ;
+    rdfs:label             "Gestion financière et comptable" ;
+    arcaq:description      "Traitement des données financières : comptabilité, trésorerie, facturation, reporting réglementaire, lutte anti-blanchiment." ;
+    arcaq:legalBasis       "Obligation légale (RGPD Art. 6.1.c) et intérêt légitime (Art. 6.1.f)"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Finance .
+
+arcaq:Purpose_ServiceCitoyen
+    a                      arcaq:ProcessingPurpose ;
+    rdfs:label             "Service aux citoyens" ;
+    arcaq:description      "Traitement des données pour la délivrance de services publics, la gestion des dossiers administratifs citoyens, les démarches en ligne." ;
+    arcaq:legalBasis       "Mission d'intérêt public (RGPD Art. 6.1.e)"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Citoyen .
+
+arcaq:Purpose_Sante
+    a                      arcaq:ProcessingPurpose ;
+    rdfs:label             "Gestion des données de santé" ;
+    arcaq:description      "Traitement des données de santé (données sensibles catégorie spéciale RGPD Art. 9) : dossiers médicaux, prestations sociales santé, télémédecine. Nécessite consentement explicite ou base légale spécifique." ;
+    arcaq:legalBasis       "Consentement explicite (RGPD Art. 9.2.a) ou intérêt public dans le domaine de la santé publique (Art. 9.2.i)" ;
+    arcaq:sensitivityLevel "SECRET"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Sante .
+
+arcaq:Purpose_Strategie
+    a                      arcaq:ProcessingPurpose ;
+    rdfs:label             "Données stratégiques et actifs immatériels" ;
+    arcaq:description      "Traitement des données stratégiques : propriété intellectuelle, brevets, plans de développement, données concurrentielles. Protection des actifs immatériels de l'organisation." ;
+    arcaq:legalBasis       "Intérêt légitime (RGPD Art. 6.1.f) — protection des actifs stratégiques" ;
+    arcaq:sensitivityLevel "TOP_SECRET"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Strategie .
+
+
+# ============================================================================
+# DATA RULES (Règles de traitement des données)
+# ============================================================================
+
+arcaq:Rule_DonneesPersonnelles_FR
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "Règle de traitement des données personnelles — Conformité RGPD France" ;
+    arcaq:name             "Règle traitement données personnelles RGPD" ;
+    arcaq:description      "Toute collecte et traitement de données personnelles doit respecter les 6 bases légales du RGPD. Obligation de minimisation des données, limitation de la finalité, et exactitude. Registre des activités de traitement obligatoire. Notification CNIL des violations sous 72h." ;
+    arcaq:ruleType         "TRAITEMENT" ;
+    arcaq:legalBasis       "RGPD Articles 5, 6, 7, 30 — Loi Informatique et Libertés" ;
+    arcaq:applicableJurisdiction "FR" ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:retentionPeriod  "Déterminée par la finalité du traitement — pas de conservation au-delà" ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:dataController   "Responsable de traitement désigné avec DPO obligatoire >250 employés" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:processingPurpose "Toute finalité nécessitant collecte de données personnelles" ;
+    arcaq:derivedFrom      arcaq:Regulation_GDPR  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_DonneesRH
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "Règle de traitement des données RH — Niveau de sensibilité et conservation" ;
+    arcaq:name             "Règle données Ressources Humaines" ;
+    arcaq:description      "Les données RH (fiche de paie, évaluations, données médicales du travail) sont CONFIDENTIAL. Conservation : bulletins de salaire 50 ans ou jusqu'à la retraite. Données de recrutement non sélectionnés: 2 ans maximum. Accès restreint aux RH et management direct uniquement." ;
+    arcaq:ruleType         "ACCES_CONSERVATION" ;
+    arcaq:legalBasis       "Code du travail Art. L1221-6 + RGPD Art. 6.1.b et 6.1.c" ;
+    arcaq:applicableJurisdiction "FR" ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:retentionPeriod  "Bulletins de paie: 50 ans minimum. Dossiers de candidature: 2 ans. Données médicales: durée du contrat + 5 ans" ;
+    arcaq:dataController   "Direction des Ressources Humaines" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:derivedFrom      arcaq:Regulation_LI_FR  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_DonneesFinancieres
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "Règle de conservation des données financières — SOX + Code commerce" ;
+    arcaq:name             "Règle données financières et comptables" ;
+    arcaq:description      "Les données financières (bilans, comptes de résultat, pièces justificatives, transactions) doivent être conservées 10 ans minimum (Code de commerce) ou 7 ans (SOX pour organisations cotées). Données de lutte anti-blanchiment: 5 ans après fin de relation client. Niveau de sensibilité: CONFIDENTIAL pour données internes, SECRET pour données de direction." ;
+    arcaq:ruleType         "CONSERVATION" ;
+    arcaq:legalBasis       "Code de commerce Art. L123-22 + SOX Section 802 + Directive AML 6" ;
+    arcaq:retentionPeriod  "10 ans minimum (Code de commerce), 7 ans SOX, 5 ans AML" ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:dataController   "Direction Financière et Comptabilité" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:applicableJurisdiction "EU" ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:derivedFrom      arcaq:Regulation_SOX  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_DonneesSante
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "Règle de traitement des données de santé — Données sensibles RGPD Art. 9" ;
+    arcaq:name             "Règle données de santé (données spéciales)" ;
+    arcaq:description      "Données de santé = catégorie spéciale RGPD Article 9. Interdiction générale de traitement sauf exception explicite (consentement, intérêt public santé, recherche médicale). Base légale: consentement explicite obligatoire ou intérêt public santé publique. Niveau de sécurité renforcé: chiffrement, pseudonymisation obligatoire. Accès ultra-restreint." ;
+    arcaq:ruleType         "TRAITEMENT_DONNEES_SENSIBLES" ;
+    arcaq:legalBasis       "RGPD Article 9 — Catégories particulières de données" ;
+    arcaq:sensitivityLevel "SECRET" ;
+    arcaq:retentionPeriod  "Dossier médical: 20 ans après dernier acte. Données de recherche: selon protocole approuvé CPP" ;
+    arcaq:dataController   "DPO + Médecin responsable (double approbation requise)" ;
+    arcaq:impactLevel      "CRITIQUE" ;
+    arcaq:processingPurpose "Santé, prévention, recherche médicale uniquement" ;
+    arcaq:derivedFrom      arcaq:Regulation_GDPR  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_DonneesStrategiques
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "Règle données stratégiques — Protection actifs immatériels" ;
+    arcaq:name             "Règle gouvernance données stratégiques" ;
+    arcaq:description      "Les données stratégiques (brevets, plans de développement, données concurrentielles, propriété intellectuelle) sont classifiées TOP_SECRET ou SECRET. Accès restreint à la direction générale et aux responsables métier désignés. Transmission chiffrée obligatoire. Audit d'accès systématique. Filtre SCAG L4 (Stratégique) appliqué à toute requête portant sur ces données." ;
+    arcaq:ruleType         "ACCES_STRATEGIQUE" ;
+    arcaq:sensitivityLevel "TOP_SECRET" ;
+    arcaq:retentionPeriod  "Conservation selon cycle de vie du produit/projet + 10 ans" ;
+    arcaq:dataController   "Direction Générale — Accès nominatif uniquement" ;
+    arcaq:impactLevel      "CRITIQUE" ;
+    arcaq:processingPurpose "Décisions stratégiques internes uniquement" ;
+    arcaq:scope            "Direction générale, VP, responsables de domaine stratégique"  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_DonneesCitoyens
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "Règle traitement données citoyens — Secteur public" ;
+    arcaq:name             "Règle données citoyennes secteur public" ;
+    arcaq:description      "Les données personnelles des citoyens dans le cadre des services publics sont traitées sur la base de la mission d'intérêt public (RGPD 6.1.e). Principe de minimisation strict: seules les données nécessaires à la mission sont collectées. Droit d'accès et rectification garanti. Interconnexion des fichiers encadrée par le RGPD et les textes sectoriels." ;
+    arcaq:ruleType         "SERVICE_PUBLIC" ;
+    arcaq:legalBasis       "RGPD Art. 6.1.e — Mission d'intérêt public" ;
+    arcaq:sensitivityLevel "INTERNAL" ;
+    arcaq:dataController   "Administration publique — DSI et DPO désigné" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:applicableJurisdiction "FR" ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_Exportation
+    a                      arcaq:DataRule ;
+    rdfs:label             "Règle d'exportation des données hors UE" ;
+    arcaq:name             "Règle transferts données hors UE" ;
+    arcaq:description      "Les transferts de données personnelles vers des pays tiers à l'UE sont interdits sauf: décision d'adéquation de la Commission (ex: Japon, Canada), clauses contractuelles types (CCT), règles d'entreprise contraignantes (BCR). Les transferts vers les USA doivent respecter le Data Privacy Framework (DPF)." ;
+    arcaq:ruleType         "EXPORTATION" ;
+    arcaq:legalBasis       "RGPD Chapitre V Articles 44 à 49" ;
+    arcaq:applicableJurisdiction "EU" ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:impactLevel      "ÉLEVÉ"  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_Retention_General
+    a                      arcaq:DataRule ;
+    rdfs:label             "Règle générale de durée de conservation des données" ;
+    arcaq:name             "Politique de rétention et d'archivage des données" ;
+    arcaq:description      "Durées de conservation par catégorie: Données clients actifs: durée de la relation + 3 ans. Données prospects non convertis: 3 ans. Données contractuelles: durée du contrat + 10 ans. Données RH: durée emploi selon type. Données financières: 10 ans. Données de santé: 20 ans. Données archivées définitivement selon droit des archives." ;
+    arcaq:ruleType         "CONSERVATION" ;
+    arcaq:retentionPeriod  "Variable: clients 3 ans, contracts 10 ans, financières 10 ans, santé 20 ans, RH selon type" ;
+    arcaq:impactLevel      "MOYEN" ;
+    arcaq:applicableJurisdiction "FR" ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR  ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:Rule_Securite
+    a                      arcaq:DataRule ;
+    rdfs:label             "Règle de sécurité des données — Chiffrement et pseudonymisation" ;
+    arcaq:name             "Règle sécurité technique des données (RGPD Art. 32)" ;
+    arcaq:description      "Mesures techniques obligatoires de sécurité: chiffrement AES-256 au repos et en transit, pseudonymisation des données personnelles, contrôle d'accès basé sur les rôles (RBAC/ReBAC), journalisation des accès et modifications, sauvegarde chiffrée hors-site, tests de pénétration annuels. Niveau SECRET+ : chiffrement bout-en-bout mandatory." ;
+    arcaq:ruleType         "SECURITE_TECHNIQUE" ;
+    arcaq:legalBasis       "RGPD Article 32 — Sécurité du traitement" ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:impactLevel      "CRITIQUE"  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+
+# ============================================================================
+# DATA DOMAINS
+# ============================================================================
+
+arcaq:Domain_Finance
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Finance" ;
+    arcaq:name             "Finance" ;
+    arcaq:description      "Données financières et comptables: bilans, comptes de résultat, trésorerie, reporting réglementaire, données bancaires, transactions, risques financiers." ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:dataController   "Direction Financière (CFO)" ;
+    arcaq:impactLevel      "ÉLEVÉ" .
+
+arcaq:Domain_RH
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Ressources Humaines (RH)" ;
+    arcaq:name             "Ressources Humaines" ;
+    arcaq:description      "Données RH: fiches de paie, dossiers du personnel, recrutement, formation, évaluations de performance, données syndicales (données spéciales RGPD), contrats de travail, absences et congés." ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:dataController   "Direction des Ressources Humaines (DRH)" ;
+    arcaq:impactLevel      "ÉLEVÉ" .
+
+arcaq:Domain_Operations
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Opérations" ;
+    arcaq:name             "Opérations" ;
+    arcaq:description      "Données opérationnelles: processus métier, gestion de la chaîne d'approvisionnement, indicateurs de performance (KPIs), gestion de la qualité, données de production." ;
+    arcaq:sensitivityLevel "INTERNAL" ;
+    arcaq:dataController   "Direction des Opérations (COO)" .
+
+arcaq:Domain_Technologie
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Technologie et Systèmes d'Information" ;
+    arcaq:name             "Technologie (IT/SI)" ;
+    arcaq:description      "Données IT: infrastructure, logs systèmes, configuration réseau, inventaire applicatif, données de cybersécurité, incidents, plans de reprise d'activité." ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:dataController   "Direction des Systèmes d'Information (DSI/CIO)" .
+
+arcaq:Domain_Compliance
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Conformité et Audit" ;
+    arcaq:name             "Conformité" ;
+    arcaq:description      "Données de conformité: résultats d'audit interne et externe, violations constatées, actions correctives, cartographie des risques, registre RGPD, déclarations réglementaires, rapports DPO." ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:dataController   "Direction de la Conformité (CCO/DPO)" .
+
+arcaq:Domain_Strategie
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Stratégique et Gouvernance" ;
+    arcaq:name             "Stratégie" ;
+    arcaq:description      "Données stratégiques: plans de développement, feuilles de route, données concurrentielles, projets d'acquisition, propriété intellectuelle, brevets, savoir-faire. Données CONFIDENTIAL à TOP_SECRET. Filtre SCAG L4 obligatoire." ;
+    arcaq:sensitivityLevel "TOP_SECRET" ;
+    arcaq:dataController   "Direction Générale (PDG/CEO)" ;
+    arcaq:impactLevel      "CRITIQUE" .
+
+arcaq:Domain_Sante
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Santé et données médicales" ;
+    arcaq:name             "Santé" ;
+    arcaq:description      "Données de santé (catégorie spéciale RGPD Art. 9): dossiers médicaux, prescriptions, résultats d'analyses, antécédents médicaux, données de santé au travail, données d'assurance maladie. Niveau SECRET minimum. Consentement explicite requis." ;
+    arcaq:sensitivityLevel "SECRET" ;
+    arcaq:dataController   "Médecin DPO co-responsable" ;
+    arcaq:impactLevel      "CRITIQUE" .
+
+arcaq:Domain_Citoyen
+    a                      arcaq:DataDomain ;
+    rdfs:label             "Domaine Citoyen — Données administratives publiques" ;
+    arcaq:name             "Données citoyennes" ;
+    arcaq:description      "Données personnelles des citoyens dans le cadre de services publics: état civil, dossiers administratifs, données fiscales, données de prestations sociales, données d'urbanisme. Base légale: mission d'intérêt public." ;
+    arcaq:sensitivityLevel "INTERNAL" ;
+    arcaq:dataController   "Administration publique — DPO désigné" .
+
+
+# ============================================================================
+# SCAG FILTER RULES (Règles des couches SCAG)
+# ============================================================================
+
+arcaq:SCAGRule_L1_PII
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "SCAG L1 — Détection PII et contenu illégal" ;
+    arcaq:name             "Règle filtre SCAG couche 1 Legal/PII" ;
+    arcaq:description      "La couche 1 du filtre SCAG (agents Shield) détecte automatiquement les données à caractère personnel (PII: nom, prénom, email, téléphone, numéro de sécurité sociale, données bancaires), le contenu illégal et les violations RGPD dans les requêtes entrantes et les réponses sortantes. Anonymisation ou blocage automatique si PII non justifié." ;
+    arcaq:ruleType         "FILTRE_SCAG_L1" ;
+    arcaq:impactLevel      "CRITIQUE" ;
+    arcaq:scope            "Toutes les requêtes et réponses de l'API" ;
+    arcaq:filteredByLayer  arcaq:SCaGLayer_Legal  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:SCAGRule_L2_ReBAC
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "SCAG L2 — Contrôle d'accès hiérarchique ReBAC" ;
+    arcaq:name             "Règle filtre SCAG couche 2 Hiérarchique/ReBAC" ;
+    arcaq:description      "La couche 2 du filtre SCAG applique le modèle Zanzibar d'OpenFGA pour vérifier les droits d'accès hiérarchiques. Chaque requête est contrôlée contre la matrice d'autorisation ReBAC: rôle utilisateur (sovereign-admin/admin/compliance/analyst/user/viewer) × ressource × action. Blocage si non-autorisé." ;
+    arcaq:ruleType         "FILTRE_SCAG_L2" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:scope            "Contrôle d'accès à toutes les ressources du catalogue" ;
+    arcaq:filteredByLayer  arcaq:SCaGLayer_Hierarchical  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:SCAGRule_L3_Culture
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "SCAG L3 — Filtre culturel et éthique" ;
+    arcaq:name             "Règle filtre SCAG couche 3 Culturel/Ethique" ;
+    arcaq:description      "La couche 3 du filtre SCAG détecte le contenu culturellement sensible, les biais discriminatoires, les sujets ethniques ou religieux délicats, et les contenus éthiquement problématiques dans les réponses générées par l'IA. Reformulation ou blocage si violation détectée." ;
+    arcaq:ruleType         "FILTRE_SCAG_L3" ;
+    arcaq:impactLevel      "MOYEN" ;
+    arcaq:filteredByLayer  arcaq:SCaGLayer_Cultural  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:SCAGRule_L4_Strategique
+    a                      arcaq:ComplianceRule ;
+    rdfs:label             "SCAG L4 — Protection intelligence stratégique et actifs immatériels" ;
+    arcaq:name             "Règle filtre SCAG couche 4 Stratégique" ;
+    arcaq:description      "La couche 4 du filtre SCAG protège les données stratégiques et les actifs immatériels. Toute requête concernant des données TOP_SECRET ou SECRET est filtrée pour éviter la fuite d'intelligence stratégique (plans de développement, brevets, données concurrentielles). Ce filtre est activé pour les domaines Stratégie et données classifiées SECRET+." ;
+    arcaq:ruleType         "FILTRE_SCAG_L4" ;
+    arcaq:sensitivityLevel "TOP_SECRET" ;
+    arcaq:impactLevel      "CRITIQUE" ;
+    arcaq:filteredByLayer  arcaq:SCaGLayer_Strategic  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+
+# ============================================================================
+# DATA CLASSIFICATION RULES
+# ============================================================================
+
+arcaq:ClassifRule_Public
+    a                      arcaq:DataRule ;
+    rdfs:label             "Données PUBLIC — Aucune restriction, diffusion libre" ;
+    arcaq:name             "Classification PUBLIC" ;
+    arcaq:description      "Données publiques sans restriction. Exemples: rapports annuels publiés, données open data, communiqués officiels, statistiques publiées. Aucune habilitation requise pour l'accès. Diffusion libre interne et externe." ;
+    arcaq:ruleType         "CLASSIFICATION" ;
+    arcaq:sensitivityLevel "PUBLIC" ;
+    arcaq:impactLevel      "FAIBLE" ;
+    arcaq:classifiedAs     arcaq:ClassificationPublic  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassifRule_Internal
+    a                      arcaq:DataRule ;
+    rdfs:label             "Données INTERNAL — Accès interne uniquement" ;
+    arcaq:name             "Classification INTERNAL" ;
+    arcaq:description      "Données internes à l'organisation. Accès restreint aux employés et prestataires autorisés uniquement. Ne pas diffuser à l'externe. Exemples: procédures internes, notes de service, données opérationnelles courantes, reporting interne." ;
+    arcaq:ruleType         "CLASSIFICATION" ;
+    arcaq:sensitivityLevel "INTERNAL" ;
+    arcaq:impactLevel      "FAIBLE" ;
+    arcaq:classifiedAs     arcaq:ClassificationInternal  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassifRule_Confidential
+    a                      arcaq:DataRule ;
+    rdfs:label             "Données CONFIDENTIAL — Accès restreint, chiffrement requis" ;
+    arcaq:name             "Classification CONFIDENTIAL" ;
+    arcaq:description      "Données confidentielles à accès restreint. Accès nominatif uniquement sur besoin avéré. Chiffrement AES-256 obligatoire au repos et en transit. Journalisation systématique de tout accès. Interdiction de copie sur supports non chiffrés. Exemples: données personnelles, données financières, données contractuelles sensibles, données RH." ;
+    arcaq:ruleType         "CLASSIFICATION" ;
+    arcaq:sensitivityLevel "CONFIDENTIAL" ;
+    arcaq:impactLevel      "ÉLEVÉ" ;
+    arcaq:classifiedAs     arcaq:ClassificationConfidential  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassifRule_Secret
+    a                      arcaq:DataRule ;
+    rdfs:label             "Données SECRET — Ultra-restreint, chiffrement bout-en-bout obligatoire" ;
+    arcaq:name             "Classification SECRET" ;
+    arcaq:description      "Données secrètes à accès ultra-restreint. Habilitation nominative du responsable hiérarchique requise. Chiffrement bout-en-bout AES-256. Aucune transmission par email non chiffré. Accès uniquement depuis systèmes approuvés. Exemples: données de santé, données bancaires sensibles, données d'enquête en cours, données syndicales." ;
+    arcaq:ruleType         "CLASSIFICATION" ;
+    arcaq:sensitivityLevel "SECRET" ;
+    arcaq:impactLevel      "CRITIQUE" ;
+    arcaq:classifiedAs     arcaq:ClassificationSecret  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
+
+arcaq:ClassifRule_TopSecret
+    a                      arcaq:DataRule ;
+    rdfs:label             "Données TOP_SECRET — Accès direction générale uniquement" ;
+    arcaq:name             "Classification TOP_SECRET" ;
+    arcaq:description      "Données top-secrètes réservées à la direction générale et aux responsables nommément désignés. Système d'information dédié et isolé (air-gap possible). Aucune copie ou transmission autorisée sans approbation PDG/CEO. Audit d'accès en temps réel. Exemples: plans d'acquisition, brevets confidentiels, données de renseignement compétitif, secrets de fabrication." ;
+    arcaq:ruleType         "CLASSIFICATION" ;
+    arcaq:sensitivityLevel "TOP_SECRET" ;
+    arcaq:impactLevel      "CRITIQUE" ;
+    arcaq:classifiedAs     arcaq:ClassificationTopSecret  ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_EU ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_FR ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_MA ;
+    arcaq:appliesInJurisdiction arcaq:Jurisdiction_LU ;
+    arcaq:belongsToDomain  arcaq:Domain_Compliance .
