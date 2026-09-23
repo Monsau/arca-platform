@@ -23,6 +23,8 @@ from dataclasses import dataclass
 
 from fastapi import APIRouter, HTTPException, Request
 
+from .openfga import MODEL_TYPE_DEFINITIONS
+
 POLICY_DSN = os.environ.get("PORTAL_POLICY_DB_DSN", "").strip()
 
 
@@ -322,7 +324,8 @@ def build_router(kc: KCAdmin, fga=None) -> APIRouter:
     def authz_model():
         client = _require_fga()
         return {"store": client.store_name, "store_id": client.store_id,
-                "model_id": client.model_id, "schema": "1.1"}
+                "model_id": client.model_id, "schema": "1.1",
+                "types": [t["type"] for t in MODEL_TYPE_DEFINITIONS]}
 
     @router.get("/authz/tuples")
     def authz_tuples(object: str = "", user: str = ""):
