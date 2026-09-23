@@ -12,6 +12,7 @@ requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -21,8 +22,9 @@ services = [
 ]
 messaging = ["kafka-python-ng>=2.0"]
 observability = ["opentelemetry-api>=1.24", "opentelemetry-sdk>=1.24"]
-ontology = ["httpx>=0.27"]
-tests = ["pytest>=8.0", "httpx>=0.27"]
+ontology = ["httpx>=0.27", "pyshacl>=0.26", "rdflib>=7.0"]
+persistence = ["sqlalchemy>=2.0"]
+tests = ["pytest>=8.0", "httpx>=0.27", "jsonschema>=4.21"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
