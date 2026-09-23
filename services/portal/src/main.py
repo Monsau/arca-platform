@@ -21,6 +21,7 @@ from fastapi.templating import Jinja2Templates
 from .auth import AuthError, OIDCClient, SessionStore
 from .config import Settings, load_ecosystem, load_modules
 from .proxy import ModuleProxy
+from .transclude import fetch_module_document
 
 APP_VERSION = "0.3.4"
 
@@ -332,7 +333,14 @@ def _not_configured() -> str:
 
 @app.get("/module/{key}", response_class=HTMLResponse)
 async def module_frame(key: str, request: Request) -> Response:
-    """Shell page hosting one module in a fluid full-size frame."""
+    """Module page composed into the portal document — no iframes.
+
+    The module UI is fetched server-side with the session's SSO token and
+    inlined into the portal shell, so the user sees one Arca Suite page with
+    one design system. Assets resolve through the authenticated /m/<key>/
+    proxy via a <base> element. An unreachable module renders an honest
+    error panel instead of a blank frame.
+    """
     session = _session(request)
     if not session:
         return RedirectResponse("/auth/login")
@@ -341,6 +349,9 @@ async def module_frame(key: str, request: Request) -> Response:
     module = modules.get(key)
     if not module:
         raise HTTPException(status_code=404, detail="unknown module")
+    token = await auth.ensure_fresh_token(request.cookies.get(settings.session_cookie))
+    document = await fetch_module_document(probe_client, module, token) if token else None
+    ui_base = module.ui_base if module.ui_base.endswith("/") else module.ui_base + "/"
     claims = session.get("claims", {})
     return templates.TemplateResponse(
         request,
@@ -349,6 +360,10 @@ async def module_frame(key: str, request: Request) -> Response:
             "user": claims,
             "active": key,
             "module": module,
+            "module_head": document.head if document else "",
+            "module_markup": document.markup if document else "",
+            "base_href": f"/m/{module.key}{ui_base}",
+            "load_error": document is None,
             "ecosystem": ECOSYSTEM,
             "modules": [dict(key=m.key, name=m.name, icon=m.icon, description=m.description) for m in modules.values()],
         },

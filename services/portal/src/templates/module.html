@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block title %}{{ module.name }} — Arca Suite{% endblock %}
+{% block extra_head %}
+  {# <base> must live in <head>: it makes every relative asset URL and
+     fetch() from the transcluded module resolve through the authenticated
+     /m/<key>/ proxy. Module head assets (styles/scripts) load the same way. #}
+  <base href="{{ base_href }}">
+  {{ module_head | safe }}
+{% endblock %}
 {% block heading %}{{ module.name }}{% endblock %}
 {% block subheading %}{{ module.description }}{% endblock %}
 {% block topbar_actions %}
@@ -8,50 +15,32 @@
 </button>
 {% endblock %}
 {% block content %}
-  {# The module serves its own UI through the authenticated proxy; the
-     frame keeps the portal chrome (navigation, identity) around it and
-     the address bar stays on the portal — no /ui/ URLs leak to users. #}
+  {# The module UI is composed into this document server-side (no iframes —
+     design rule). Relative asset URLs and fetch() calls from the module
+     resolve through the authenticated /m/<key>/ proxy thanks to <base>. #}
   <div class="module-host" id="module-host">
-    <div class="module-loading" id="module-loading" role="status">
+    <div class="module-loading" id="module-loading" role="status" hidden>
       <div class="spinner" aria-hidden="true"></div>
       <div class="module-loading-text">Loading {{ module.name }}…</div>
     </div>
-    <div class="module-error" id="module-error" role="alert" hidden>
+    <div class="module-error" id="module-error" role="alert" {% if not load_error %}hidden{% endif %}>
       <span class="material-icons" aria-hidden="true">error_outline</span>
-      <div class="module-error-text">{{ module.name }} did not respond in time.</div>
+      <div class="module-error-text">{{ module.name }} did not respond. It may be starting up — retry in a moment.</div>
       <button class="btn" onclick="reloadModule()">Retry</button>
     </div>
-    <iframe class="module-frame" id="module-frame"
-            src="/m/{{ module.key }}/{{ module.ui_base.lstrip('/') }}"
-            title="{{ module.name }}"
-            onload="onModuleLoaded()"></iframe>
+    <div class="module-content" id="module-content">
+      {{ module_markup | safe }}
+    </div>
   </div>
   <script>
-    // Loading experience: skeleton stays until the frame signals it rendered;
-    // a hang surfaces an honest error with a retry instead of a blank area.
-    var LOAD_TIMEOUT_MS = 20000;
-    var loadTimer = null;
-
-    function onModuleLoaded() {
-      clearTimeout(loadTimer);
-      document.getElementById('module-loading').hidden = true;
-      document.getElementById('module-error').hidden = true;
-      var frame = document.getElementById('module-frame');
-      frame.classList.add('ready');
-    }
+    // One document, one design system: the module markup above is part of this
+    // page. Reload refreshes the whole composed page; the error panel only
+    // appears when the server reports the module as unreachable.
     function reloadModule() {
-      var frame = document.getElementById('module-frame');
-      document.getElementById('module-error').hidden = true;
-      document.getElementById('module-loading').hidden = false;
-      frame.classList.remove('ready');
-      clearTimeout(loadTimer);
-      loadTimer = setTimeout(onModuleTimeout, LOAD_TIMEOUT_MS);
-      frame.src = frame.src;
+      window.location.reload();
     }
-    function onModuleTimeout() {
-      document.getElementById('module-loading').hidden = true;
-      document.getElementById('module-error').hidden = false;
-    }
-    loadTimer = setTimeout(onModuleTimeout, LOAD_TIMEOUT_MS);
+    {% if load_error %}
+    document.getElementById('module-loading').hidden = true;
+    {% endif %}
   </script>
 {% endblock %}

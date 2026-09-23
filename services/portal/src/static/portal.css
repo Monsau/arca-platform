@@ -226,12 +226,11 @@ a { color: inherit; text-decoration: none; }
 
 .content { flex: 1; min-height: 0; }
 
-/* Module frame: fluid, chromeless, the module UI owns the whole area. */
-.module-frame {
-    width: 100%;
+/* Module page: the module UI is composed into this document (no iframes).
+   The module content owns the whole area below the topbar. */
+.module-content {
     height: 100%;
-    border: none;
-    display: block;
+    overflow-y: auto;
     background: var(--bg-primary);
 }
 
@@ -492,9 +491,6 @@ a { color: inherit; text-decoration: none; }
 /* ---- Module loading & error states ------------------------------------------ */
 
 .module-host { position: relative; height: 100%; }
-
-.module-frame { visibility: hidden; }
-.module-frame.ready { visibility: visible; }
 
 .module-loading {
     position: absolute;

@@ -15,15 +15,16 @@ navigation, instead of exposing one hostname and URL style per module.
   design system (`portal.css`) so the suite reads as one product.
 - **Module proxy**: `/m/<module>/<path>` forwards to the module's in-cluster
   service, attaching the caller's Keycloak access token as `Authorization:
-  Bearer`. Module pages are embedded via a fluid full-size frame served from
-  the portal origin, so users never see per-module `/ui/` URLs.
+  Bearer`. Module pages are composed into the portal document server-side
+  (transclusion, see `src/transclude.py`) — iframes are forbidden by design —
+  so users see one Arca Suite page and never see per-module `/ui/` URLs.
 
 ## What the portal deliberately does not do
 
 - No mock or synthetic data. The overview page probes each module's
   `/healthz` live and reports honest failures.
-- No domain logic: the portal never re-interprets module data; the frame
-  shows the module's own UI.
+- No domain logic: the portal never re-interprets module data; it inlines the
+  module's own UI markup into its shell.
 - No user management: identity lifecycle stays in Keycloak.
 
 ## Module registry
@@ -69,5 +70,6 @@ when deploying elsewhere. Each entry:
 
 - Remove the per-module dev auth bypasses (`*_AUTH_DISABLED`) and have each
   module validate the portal-forwarded JWT instead.
-- Replace framed module UIs with natively integrated pages, module by
-  module, reusing this design system.
+- Migrate module UIs to the shared design-system sheet
+  (`docs/design-system/arcasuite-ui.css`), module by module, so the
+  transcluded markup matches the portal chrome without per-module drift.
