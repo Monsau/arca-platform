@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.suite/schemas/lifecycle/lifecycle-state.json",
+  "title": "Arca Platform Lifecycle State",
+  "type": "string",
+  "enum": ["registered", "starting", "ready", "degraded", "stopping", "stopped", "failed"]
+}

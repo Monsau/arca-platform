@@ -1,4 +1,4 @@
-"""Vault reference adapter for the Arca Platform secrets contract.""""
+"""Vault reference adapter for the Arca Platform secrets contract."""
 
 from __future__ import annotations
 

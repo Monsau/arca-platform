@@ -2,16 +2,26 @@
 
 Products query this API to discover platform capabilities and the contracts
 required to use them.
+
+Persistence: in-memory by default (tests, local development); SQL-backed
+(SQLite/PostgreSQL) with an idempotent boot migration when
+``ARCA_DISCOVERY_BACKEND=sql`` — the store URL comes from
+``ARCA_DISCOVERY_DATABASE_URL``.
 """
 
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI, Query
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="Arca Capability Discovery API", version="0.1.0")
-
-_capabilities: list[dict] = []
+from adapters.discovery.discovery_adapter import (
+    CapabilityRegistry,
+    InMemoryCapabilityRegistry,
+    SqlCapabilityRegistry,
+)
+from sdk.common.persistence import PlatformStore
 
 
 class Capability(BaseModel):
@@ -24,27 +34,37 @@ class Capability(BaseModel):
     required_contracts: list[str] = Field(default_factory=list)
 
 
-@app.get("/healthz")
-def healthz() -> dict:
-    return {"status": "healthy"}
+def default_registry() -> CapabilityRegistry:
+    """Registry backend from the environment: memory (default) or sql."""
+    if os.getenv("ARCA_DISCOVERY_BACKEND", "memory") == "sql":
+        url = os.getenv("ARCA_DISCOVERY_DATABASE_URL", "sqlite:///./arca_discovery.db")
+        return SqlCapabilityRegistry(PlatformStore(url))
+    return InMemoryCapabilityRegistry()
 
 
-@app.post("/v1/capabilities")
-def register_capability(cap: Capability) -> dict:
-    _capabilities.append(cap.model_dump())
-    return {"status": "registered", "id": cap.id}
+def create_app(registry: CapabilityRegistry | None = None) -> FastAPI:
+    """App factory — inject a registry store for tests or non-default backends."""
+    registry = registry or default_registry()
+    app = FastAPI(title="Arca Capability Discovery API", version="0.1.0")
+
+    @app.get("/healthz")
+    def healthz() -> dict:
+        return {"status": "healthy"}
+
+    @app.post("/v1/capabilities")
+    def register_capability(cap: Capability) -> dict:
+        cap_id = registry.register(cap.model_dump())
+        return {"status": "registered", "id": cap_id}
+
+    @app.get("/v1/capabilities")
+    def search_capabilities(
+        product: str | None = Query(default=None),
+        contract: str | None = Query(default=None),
+    ) -> dict:
+        return {"capabilities": registry.search(product=product, contract=contract)}
+
+    return app
 
 
-@app.get("/v1/capabilities")
-def search_capabilities(
-    product: str | None = Query(default=None),
-    contract: str | None = Query(default=None),
-) -> dict:
-    results = _capabilities
-    if product:
-        results = [c for c in results if c.get("product") == product]
-    if contract:
-        results = [
-            c for c in results if contract in c.get("required_contracts", [])
-        ]
-    return {"capabilities": results}
+# Module-level app for `uvicorn services.capability_discovery.src.main:app`.
+app = create_app()

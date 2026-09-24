@@ -1,4 +1,4 @@
-"""OpenTelemetry reference adapter for the Arca Platform observability contract.""""
+"""OpenTelemetry reference adapter for the Arca Platform observability contract."""
 
 from __future__ import annotations
 

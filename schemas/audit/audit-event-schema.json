@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.suite/schemas/audit/audit-event.json",
+  "title": "Arca Platform Audit Event",
+  "type": "object",
+  "required": [
+    "audit_id",
+    "timestamp",
+    "actor",
+    "action",
+    "resource",
+    "outcome",
+    "correlation_id",
+    "tenant_id",
+    "entry_point",
+    "chain",
+    "prev_hash",
+    "hash"
+  ],
+  "properties": {
+    "audit_id": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "actor": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "roles": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Dotted action name, e.g. ontology.change_proposed"
+    },
+    "resource": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "outcome": { "enum": ["success", "denied", "failure"] },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "entry_point": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Logical entry point provenance (caller-controlled values forbidden per EP-09)"
+    },
+    "chain": { "type": "string", "minLength": 1 },
+    "prev_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "additionalProperties": true
+}

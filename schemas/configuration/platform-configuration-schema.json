@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.suite/schemas/configuration/platform-configuration.json",
+  "title": "Arca Platform Configuration Document",
+  "type": "object",
+  "required": ["environment"],
+  "properties": {
+    "environment": { "type": "string", "minLength": 1 },
+    "tenant_id": { "type": ["string", "null"] },
+    "log_level": { "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
+    "adapters": {
+      "type": "object",
+      "properties": {
+        "identity": { "type": "string", "minLength": 1 },
+        "secrets": { "type": "string", "minLength": 1 },
+        "messaging": { "type": "string", "minLength": 1 },
+        "observability": { "type": "string", "minLength": 1 },
+        "ontology_write": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "endpoints": {
+      "type": "object",
+      "properties": {
+        "registry": { "type": "string", "minLength": 1 },
+        "discovery": { "type": "string", "minLength": 1 },
+        "bootstrap": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "messaging": {
+      "type": "object",
+      "properties": {
+        "bootstrap_servers": { "type": "string", "minLength": 1 },
+        "topic_prefix": { "type": "string", "minLength": 1 },
+        "consumer_group": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "observability": {
+      "type": "object",
+      "properties": {
+        "otel_endpoint": { "type": ["string", "null"] },
+        "metrics_enabled": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

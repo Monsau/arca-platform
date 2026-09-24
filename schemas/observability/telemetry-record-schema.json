@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arca.suite/schemas/observability/telemetry-record.json",
+  "title": "Arca Platform Telemetry Record",
+  "type": "object",
+  "required": ["timestamp", "severity", "product", "service", "instance_id", "correlation_id", "trace_id", "kind", "name"],
+  "properties": {
+    "timestamp": { "type": "string", "format": "date-time" },
+    "severity": { "enum": ["debug", "info", "warning", "error"] },
+    "product": { "type": "string", "minLength": 1 },
+    "service": { "type": "string", "minLength": 1 },
+    "instance_id": { "type": "string", "minLength": 1 },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "trace_id": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["log", "metric", "trace"] },
+    "name": { "type": "string", "minLength": 1 },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
